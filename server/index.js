@@ -1,0 +1,62 @@
+require('dotenv').config()
+const express = require('express')
+const cors = require('cors')
+
+const app = express()
+const PORT = process.env.PORT || 3000
+
+// ──────────────────────────────────────────────────────────────
+// Middlewares
+// ──────────────────────────────────────────────────────────────
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:5174'], // Puerto del frontend Vite
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}))
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+
+// Logging básico de requests
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`)
+  next()
+})
+
+// ──────────────────────────────────────────────────────────────
+// Rutas
+// ──────────────────────────────────────────────────────────────
+app.use('/api/usuarios',   require('./routes/usuarios'))
+app.use('/api/compras',    require('./routes/compras'))
+app.use('/api/gastos',     require('./routes/gastos'))
+app.use('/api/inventario', require('./routes/inventario'))
+
+// Ruta raíz: health check
+app.get('/api/health', async (req, res) => {
+  const pool = require('./db')
+  try {
+    await pool.query('SELECT 1')
+    res.json({ success: true, message: 'API funcionando y BD conectada ✅', timestamp: new Date() })
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error de conexión a BD ❌', error: err.message })
+  }
+})
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Ruta ${req.method} ${req.url} no encontrada` })
+})
+
+// Error handler global
+app.use((err, req, res, next) => {
+  console.error('Error no manejado:', err)
+  res.status(500).json({ success: false, message: 'Error interno del servidor' })
+})
+
+// ──────────────────────────────────────────────────────────────
+// Iniciar servidor
+// ──────────────────────────────────────────────────────────────
+app.listen(PORT, () => {
+  console.log(`\n🚀 Servidor corriendo en http://localhost:${PORT}`)
+  console.log(`📡 Health check: http://localhost:${PORT}/api/health`)
+  console.log(`👥 Usuarios API: http://localhost:${PORT}/api/usuarios\n`)
+})
