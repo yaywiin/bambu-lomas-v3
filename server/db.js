@@ -1,24 +1,20 @@
 require('dotenv').config()
 const { Pool } = require('pg')
 
-const pool = new Pool({
-  host:     process.env.PGHOST,
-  database: process.env.PGDATABASE,
-  user:     process.env.PGUSER,
-  password: process.env.PGPASSWORD,
-  port:     5432,
-  ssl: { rejectUnauthorized: false },
-  max: 1,                        // Serverless: máximo 1 conexión por función
-  idleTimeoutMillis: 120000,
-  connectionTimeoutMillis: 10000, // 10s para cold starts en Vercel/Neon
-})
+// Neon recomienda usar connection string para ambientes serverless
+const connectionString = process.env.DATABASE_URL ||
+  `postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}/${process.env.PGDATABASE}?sslmode=require`
 
-pool.on('connect', () => {
-  console.log('✅ Conectado a la base de datos PostgreSQL (Neon)')
+const pool = new Pool({
+  connectionString,
+  ssl: { rejectUnauthorized: false },
+  max: 1,
+  idleTimeoutMillis: 120000,
+  connectionTimeoutMillis: 10000,
 })
 
 pool.on('error', (err) => {
-  console.error('❌ Error inesperado en el pool de BD:', err)
+  console.error('❌ Error inesperado en el pool de BD:', err.message)
 })
 
 module.exports = pool
