@@ -8,11 +8,25 @@ const PORT = process.env.PORT || 3000
 // ──────────────────────────────────────────────────────────────
 // Middlewares
 // ──────────────────────────────────────────────────────────────
+
+// ALLOWED_ORIGINS: lista separada por comas en la variable de entorno
+// Ej: https://mi-admin.vercel.app,https://otro-dominio.com
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : ['http://localhost:5173', 'http://localhost:5174']
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174'], // Puerto del frontend Vite
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin)) return callback(null, true)
+    callback(new Error(`CORS: Origin '${origin}' no permitido`))
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
 }))
+
+app.options('*', cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
