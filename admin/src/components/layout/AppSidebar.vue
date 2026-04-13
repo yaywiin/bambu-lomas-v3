@@ -22,19 +22,15 @@
       <router-link to="/">
         <img
           v-if="isExpanded || isHovered || isMobileOpen"
-          class="dark:hidden"
-          src="/images/logo/logo.svg"
-          alt="Logo"
-          width="150"
-          height="40"
+          class="h-10 w-auto dark:hidden"
+          src="/images/logo/logo.png"
+          alt="Bambú Lomas"
         />
         <img
           v-if="isExpanded || isHovered || isMobileOpen"
-          class="hidden dark:block"
-          src="/images/logo/logo-dark.svg"
-          alt="Logo"
-          width="150"
-          height="40"
+          class="h-10 w-auto hidden dark:block"
+          src="/images/logo/logo.png"
+          alt="Bambú Lomas"
         />
         <img
           v-else
