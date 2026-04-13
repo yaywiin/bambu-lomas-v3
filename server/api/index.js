@@ -1,0 +1,60 @@
+require('dotenv').config()
+const express = require('express')
+const cors    = require('cors')
+
+const app = express()
+
+// ── CORS ──────────────────────────────────────────────────────
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim())
+  : ['http://localhost:5173', 'http://localhost:5174']
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true)
+    callback(new Error(`CORS: Origin '${origin}' no permitido`))
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}))
+app.options('*', cors())
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
+
+// ── Logging ───────────────────────────────────────────────────
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`)
+  next()
+})
+
+// ── Rutas ─────────────────────────────────────────────────────
+app.use('/api/usuarios',   require('../routes/usuarios'))
+app.use('/api/compras',    require('../routes/compras'))
+app.use('/api/gastos',     require('../routes/gastos'))
+app.use('/api/inventario', require('../routes/inventario'))
+
+// ── Health check ──────────────────────────────────────────────
+app.get('/api/health', async (req, res) => {
+  const pool = require('../db')
+  try {
+    await pool.query('SELECT 1')
+    res.json({ success: true, message: 'API funcionando y BD conectada ✅', ts: new Date() })
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Error de conexión a BD ❌', error: err.message })
+  }
+})
+
+// ── 404 ───────────────────────────────────────────────────────
+app.use((req, res) => {
+  res.status(404).json({ success: false, message: `Ruta ${req.method} ${req.url} no encontrada` })
+})
+
+// ── Error handler ─────────────────────────────────────────────
+app.use((err, req, res, next) => {
+  console.error('Error:', err.message)
+  res.status(500).json({ success: false, message: err.message || 'Error interno' })
+})
+
+// ── Exportar para Vercel serverless ──────────────────────────
+module.exports = app
