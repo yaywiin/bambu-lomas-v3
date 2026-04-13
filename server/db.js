@@ -2,16 +2,15 @@ require('dotenv').config()
 const { Pool } = require('pg')
 
 const pool = new Pool({
-  host: process.env.PGHOST,
+  host:     process.env.PGHOST,
   database: process.env.PGDATABASE,
-  user: process.env.PGUSER,
+  user:     process.env.PGUSER,
   password: process.env.PGPASSWORD,
-  ssl: {
-    rejectUnauthorized: false, // Neon requiere SSL
-  },
-  max: 10,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
+  port:     5432,
+  ssl: { rejectUnauthorized: false },
+  max: 1,                        // Serverless: máximo 1 conexión por función
+  idleTimeoutMillis: 120000,
+  connectionTimeoutMillis: 10000, // 10s para cold starts en Vercel/Neon
 })
 
 pool.on('connect', () => {
