@@ -67,10 +67,15 @@ app.use((err, req, res, next) => {
 })
 
 // ──────────────────────────────────────────────────────────────
-// Iniciar servidor
+// Iniciar servidor (solo en local, no en Vercel)
 // ──────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n🚀 Servidor corriendo en http://localhost:${PORT}`)
-  console.log(`📡 Health check: http://localhost:${PORT}/api/health`)
-  console.log(`👥 Usuarios API: http://localhost:${PORT}/api/usuarios\n`)
-})
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`\n🚀 Servidor corriendo en http://localhost:${PORT}`)
+    console.log(`📡 Health check: http://localhost:${PORT}/api/health`)
+    console.log(`👥 Usuarios API: http://localhost:${PORT}/api/usuarios\n`)
+  })
+}
+
+// Exportar para Vercel serverless
+module.exports = app
