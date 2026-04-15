@@ -10,6 +10,28 @@ export interface Compra {
   edited_at?: string
 }
 
+export interface Renglon {
+  id: number
+  compra_id: number
+  producto: string
+  tipo_producto: string
+  unidad_medida: string
+  cantidad: number
+  precio_unitario: number
+  descuento: number
+  total: number
+}
+
+export interface RenglonPayload {
+  producto: string
+  tipo_producto: string
+  unidad_medida: string
+  cantidad: number
+  precio_unitario: number
+  descuento: number
+  total: number
+}
+
 export interface CompraPayload {
   id: number
   proveedor: string
@@ -56,5 +78,33 @@ export function useCompras() {
     await handleResponse(res)
   }
 
-  return { getCompras, crearCompra, actualizarCompra, eliminarCompra }
+  const getCompra = async (id: number): Promise<Compra> => {
+    const res = await fetch(`${API_BASE}/compras/${id}`)
+    const json = await handleResponse<Compra>(res)
+    return json.data!
+  }
+
+  // ── Renglones (Desglose) ────────────────────────────────────
+  const getRenglones = async (compraId: number): Promise<Renglon[]> => {
+    const res = await fetch(`${API_BASE}/compras/${compraId}/desglose`)
+    const json = await handleResponse<Renglon[]>(res)
+    return json.data || []
+  }
+
+  const crearRenglon = async (compraId: number, payload: RenglonPayload): Promise<Renglon> => {
+    const res = await fetch(`${API_BASE}/compras/${compraId}/desglose`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const json = await handleResponse<Renglon>(res)
+    return json.data!
+  }
+
+  const eliminarRenglon = async (compraId: number, renglonId: number): Promise<void> => {
+    const res = await fetch(`${API_BASE}/compras/${compraId}/desglose/${renglonId}`, { method: 'DELETE' })
+    await handleResponse(res)
+  }
+
+  return { getCompras, getCompra, crearCompra, actualizarCompra, eliminarCompra, getRenglones, crearRenglon, eliminarRenglon }
 }

@@ -30,6 +30,12 @@ const router = createRouter({
       meta: { title: 'Compras' },
     },
     {
+      path: '/admin/compras/desglose/:id',
+      name: 'DesgloseCompra',
+      component: () => import('../views/Pages/Administracion/Desglose.vue'),
+      meta: { title: 'Desglose' },
+    },
+    {
       path: '/admin/gastos',
       name: 'Gastos',
       component: () => import('../views/Pages/Administracion/Gastos.vue'),

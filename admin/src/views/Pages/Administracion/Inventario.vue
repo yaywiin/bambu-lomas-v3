@@ -25,14 +25,14 @@
                 <th class="px-5 py-3 text-left sm:px-6">
                   <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Tipo</p>
                 </th>
-                <th class="px-5 py-3 text-left sm:px-6">
+                <th class="px-5 py-3 text-right sm:px-6">
                   <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Existencia</p>
                 </th>
                 <th class="px-5 py-3 text-left sm:px-6">
-                  <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Costo Promedio</p>
-                </th>
-                <th class="px-5 py-3 text-left sm:px-6">
                   <p class="font-medium text-gray-500 text-sm dark:text-gray-400">U/M</p>
+                </th>
+                <th class="px-5 py-3 text-right sm:px-6">
+                  <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Costo Promedio</p>
                 </th>
                 <th class="px-5 py-3 text-left sm:px-6">
                   <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Última Compra</p>
@@ -40,6 +40,7 @@
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+
               <!-- Skeleton loading -->
               <tr v-if="loading" v-for="i in 4" :key="`sk-${i}`">
                 <td v-for="j in 6" :key="j" class="px-5 py-4 sm:px-6">
@@ -54,41 +55,56 @@
                 :key="item.id"
                 class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
               >
+                <!-- Producto -->
                 <td class="px-5 py-4 sm:px-6">
                   <p class="text-gray-800 text-sm font-medium dark:text-white/90">{{ item.producto }}</p>
                 </td>
+
+                <!-- Tipo -->
                 <td class="px-5 py-4 sm:px-6">
                   <span
                     class="rounded-full px-2.5 py-1 text-xs font-medium"
                     :class="{
-                      'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-400': item.tipo === 'Insumo',
-                      'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300': item.tipo !== 'Insumo'
+                      'bg-blue-50 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400':   item.tipo === 'Insumo',
+                      'bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400': item.tipo === 'Desechable',
+                      'bg-green-50 text-green-700 dark:bg-green-500/15 dark:text-green-400': item.tipo === 'Limpieza',
+                      'bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400': item.tipo === 'Terminado',
+                      'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300': !['Insumo','Desechable','Limpieza','Terminado'].includes(item.tipo),
                     }"
                   >{{ item.tipo }}</span>
                 </td>
-                <td class="px-5 py-4 sm:px-6">
+
+                <!-- Existencia -->
+                <td class="px-5 py-4 sm:px-6 text-right">
                   <p
-                    class="text-sm font-medium"
+                    class="text-sm font-medium tabular-nums"
                     :class="Number(item.existencia) < 10
                       ? 'text-error-500 dark:text-error-400'
                       : 'text-gray-800 dark:text-white/90'"
                   >
-                    {{ Number(item.existencia).toLocaleString('es-GT', { maximumFractionDigits: 2 }) }}
+                    {{ Number(item.existencia).toLocaleString('es-GT', { maximumFractionDigits: 3 }) }}
                   </p>
                 </td>
-                <td class="px-5 py-4 sm:px-6">
-                  <p class="text-gray-800 text-sm font-medium dark:text-white/90">
-                    {{ Number(item.costo_promedio).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
-                  </p>
-                </td>
+
+                <!-- U/M -->
                 <td class="px-5 py-4 sm:px-6">
                   <p class="text-gray-500 text-sm dark:text-gray-400">{{ item.u_m }}</p>
                 </td>
+
+                <!-- Costo Promedio -->
+                <td class="px-5 py-4 sm:px-6 text-right">
+                  <p class="text-gray-800 text-sm font-medium dark:text-white/90 tabular-nums">
+                    ${{ Number(item.costo_promedio).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                  </p>
+                </td>
+
+                <!-- Última Compra -->
                 <td class="px-5 py-4 sm:px-6">
                   <p class="text-gray-500 text-sm dark:text-gray-400">{{ formatFecha(item.ultima_compra) }}</p>
                 </td>
               </tr>
 
+              <!-- Empty state -->
               <tr v-if="!loading && inventario.length === 0">
                 <td colspan="6" class="px-5 py-10 text-center sm:px-6">
                   <div class="flex flex-col items-center gap-2">
@@ -99,6 +115,7 @@
                   </div>
                 </td>
               </tr>
+
             </tbody>
           </table>
         </div>
