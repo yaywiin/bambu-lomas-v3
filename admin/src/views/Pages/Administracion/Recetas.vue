@@ -26,48 +26,53 @@
         </div>
 
         <!-- Main Table -->
-        <div class="bg-white dark:bg-gray-900 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-800 flex-1 overflow-hidden flex flex-col">
+        <div class="flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] flex flex-col">
           <!-- Loading -->
           <div v-if="loading" class="flex items-center justify-center py-20">
             <svg class="w-8 h-8 animate-spin text-brand-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
           </div>
-          <div v-else class="overflow-x-auto custom-scrollbar flex-1">
-            <table class="w-full text-left border-collapse min-w-[700px]">
+          <div v-else class="max-w-full overflow-x-auto custom-scrollbar flex-1">
+            <table class="min-w-full">
               <thead>
-                <tr class="bg-gray-50/50 dark:bg-gray-800/30 border-b border-gray-100 dark:border-gray-800">
-                  <th class="px-6 py-5 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest w-1/3">Nombre</th>
-                  <th class="px-6 py-5 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest w-1/4">Último Costo Real</th>
-                  <th class="px-6 py-5 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest w-1/4">Fecha de Alta</th>
-                  <th class="px-6 py-5 text-[11px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest text-center">Acciones</th>
+                <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                  <th class="px-5 py-3 text-left sm:px-6 w-1/3">
+                    <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Nombre</p>
+                  </th>
+                  <th class="px-5 py-3 text-left sm:px-6 w-1/4">
+                    <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Último Costo Real</p>
+                  </th>
+                  <th class="px-5 py-3 text-left sm:px-6 w-1/4">
+                    <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Fecha de Alta</p>
+                  </th>
+                  <th class="px-5 py-3 text-center sm:px-6">
+                    <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Acciones</p>
+                  </th>
                 </tr>
               </thead>
-              <tbody class="divide-y divide-gray-50 dark:divide-gray-800/50">
+              <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 
-                <tr v-for="receta in recetas" :key="receta.id" class="hover:bg-gray-50/80 dark:hover:bg-gray-800/50 transition-colors group">
-                  <td class="px-6 py-4">
-                    <span class="font-semibold text-gray-800 dark:text-gray-200 block">{{ receta.nombre }}</span>
+                <tr v-for="receta in recetas" :key="receta.id" class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                  <td class="px-5 py-4 sm:px-6">
+                    <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ receta.nombre }}</p>
                   </td>
-                  <td class="px-6 py-4">
-                    <span class="font-bold text-green-600 dark:text-green-500 bg-green-50 dark:bg-green-500/10 px-3 py-1 rounded-lg text-sm">
+                  <td class="px-5 py-4 sm:px-6">
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400">
                       ${{ Number(receta.costo).toFixed(2) }}
                     </span>
                   </td>
-                  <td class="px-6 py-4">
-                    <div class="flex items-center gap-2 text-gray-500 dark:text-gray-400 text-sm font-medium">
-                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                      {{ formatFecha(receta.created_at) }}
-                    </div>
+                  <td class="px-5 py-4 sm:px-6">
+                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ formatFecha(receta.created_at) }}</p>
                   </td>
-                  <td class="px-6 py-4">
-                    <div class="flex items-center justify-center gap-2">
-                      <button @click="verReceta(receta)" class="text-blue-500 hover:text-white bg-blue-50 hover:bg-blue-500 dark:bg-blue-500/10 dark:hover:bg-blue-500 p-2.5 rounded-xl transition-all" title="Ver detalle">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                  <td class="px-5 py-4 sm:px-6 text-center">
+                    <div class="flex items-center justify-center gap-3">
+                      <button @click="verReceta(receta)" class="text-gray-400 hover:text-brand-500 transition-colors tooltip" title="Ver detalle">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
                       </button>
-                      <button @click="editarReceta(receta)" class="text-amber-500 hover:text-white bg-amber-50 hover:bg-amber-500 dark:bg-amber-500/10 dark:hover:bg-amber-500 p-2.5 rounded-xl transition-all" title="Editar receta">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                      <button @click="editarReceta(receta)" class="text-gray-400 hover:text-amber-500 transition-colors tooltip" title="Editar receta">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
                       </button>
-                      <button @click="borrarReceta(receta)" class="text-red-500 hover:text-white bg-red-50 hover:bg-red-500 dark:bg-red-500/10 dark:hover:bg-red-500 p-2.5 rounded-xl transition-all" title="Borrar receta">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      <button @click="borrarReceta(receta)" class="text-gray-400 hover:text-red-500 transition-colors tooltip" title="Borrar receta">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       </button>
                     </div>
                   </td>
@@ -220,23 +225,43 @@
 
             <!-- Tabla de Ingredientes Agregados -->
             <div class="overflow-x-auto custom-scrollbar">
-              <table class="w-full text-left border-collapse min-w-[600px]">
+              <table class="min-w-full">
                 <thead>
-                  <tr class="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800">
-                    <th class="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase">Insumo</th>
-                    <th class="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase text-center">Unidad</th>
-                    <th class="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase text-center">Cantidad</th>
-                    <th class="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase text-right">Costo Estimado</th>
-                    <th class="px-6 py-4 text-[11px] font-bold text-gray-500 uppercase text-center w-16" v-if="viewMode !== 'ver'">Acciones</th>
+                  <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                    <th class="px-5 py-3 text-left sm:px-6">
+                      <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Insumo</p>
+                    </th>
+                    <th class="px-5 py-3 text-center sm:px-6">
+                      <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Unidad</p>
+                    </th>
+                    <th class="px-5 py-3 text-center sm:px-6">
+                      <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Cantidad</p>
+                    </th>
+                    <th class="px-5 py-3 text-right sm:px-6">
+                      <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Costo Estimado</p>
+                    </th>
+                    <th class="px-5 py-3 text-center w-16" v-if="viewMode !== 'ver'">
+                      <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Acciones</p>
+                    </th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900">
-                  <tr v-for="(ing, idx) in ingredientesLista" :key="idx" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-                    <td class="px-6 py-3 font-medium text-gray-800 dark:text-gray-200 text-sm">{{ ing.producto }}</td>
-                    <td class="px-6 py-3 text-gray-600 dark:text-gray-400 text-sm text-center">{{ ing.unidad }}</td>
-                    <td class="px-6 py-3 font-semibold text-gray-800 dark:text-gray-200 text-sm text-center">{{ ing.cantidad }}</td>
-                    <td class="px-6 py-3 font-semibold text-brand-600 dark:text-brand-400 text-sm text-right">${{ ing.costo_calculado.toFixed(2) }}</td>
-                    <td class="px-6 py-3 text-center" v-if="viewMode !== 'ver'">
+                <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-transparent">
+                  <tr v-for="(ing, idx) in ingredientesLista" :key="idx" class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                    <td class="px-5 py-4 sm:px-6">
+                      <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ ing.producto }}</p>
+                    </td>
+                    <td class="px-5 py-4 sm:px-6 text-center">
+                      <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400">
+                        {{ ing.unidad }}
+                      </span>
+                    </td>
+                    <td class="px-5 py-4 sm:px-6 text-center">
+                      <p class="text-sm text-gray-800 dark:text-white/90 font-medium">{{ ing.cantidad }}</p>
+                    </td>
+                    <td class="px-5 py-4 sm:px-6 text-right">
+                      <p class="text-sm text-brand-600 dark:text-brand-400 font-medium">${{ Number(ing.costo_calculado).toFixed(2) }}</p>
+                    </td>
+                    <td class="px-5 py-4 text-center" v-if="viewMode !== 'ver'">
                       <button @click="removerIngrediente(idx)" class="text-gray-400 hover:text-red-500 transition-colors p-1" title="Remover">
                         <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                       </button>
@@ -398,13 +423,27 @@ const hideSugerenciasInsumo = () => {
 const agregarIngrediente = () => {
   if (!formIngrediente.producto || !formIngrediente.unidad || !formIngrediente.cantidad) return
 
+  // Validación estricta: verificar que existe en el inventario
+  const itemMatch = inventarioData.value.find(
+    item => item.producto.toLowerCase() === formIngrediente.producto.trim().toLowerCase()
+  )
+
+  if (!itemMatch) {
+    alert("Error: Producto no encontrado en el inventario.")
+    return
+  }
+
+  // Extraer valores reales por si el usuario lo escribió manualmente sin hacer clic en autocompletar
+  const productoReal = itemMatch.producto
+  const costoRef = Number(itemMatch.costo_promedio) || 0
+
   const factor = (formIngrediente.unidad === 'Gramos (g)' || formIngrediente.unidad === 'Mililitros (ml)')
     ? 0.001 : 1
 
-  const costoCalc = formIngrediente.cantidad * formIngrediente.costo_referencia * factor
+  const costoCalc = formIngrediente.cantidad * costoRef * factor
 
   ingredientesLista.value.push({
-    producto:         formIngrediente.producto,
+    producto:         productoReal,
     unidad:           formIngrediente.unidad,
     cantidad:         formIngrediente.cantidad,
     costo_calculado:  costoCalc || 0
