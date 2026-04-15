@@ -33,6 +33,7 @@ app.use('/api/compras',    require('../routes/compras'))
 app.use('/api/compras/:compraId/desglose', require('../routes/compras_desglose'))
 app.use('/api/gastos',     require('../routes/gastos'))
 app.use('/api/inventario', require('../routes/inventario'))
+app.use('/api/recetas',    require('../routes/recetas'))
 
 // ── Health check ──────────────────────────────────────────────
 app.get('/api/health', async (req, res) => {
