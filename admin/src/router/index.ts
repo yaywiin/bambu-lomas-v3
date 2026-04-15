@@ -56,7 +56,7 @@ const router = createRouter({
     {
       path: '/admin/carta',
       name: 'Carta',
-      component: EnDesarrollo,
+      component: () => import('../views/Pages/Administracion/Carta.vue'),
       meta: { title: 'Carta' },
     },
     {

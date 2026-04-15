@@ -1,32 +1,29 @@
 <template>
   <AdminLayout>
-    <div class="h-[calc(100vh-100px)] flex flex-col p-4 md:p-8 space-y-6">
+    <div class="space-y-5 sm:space-y-6">
       
       <!-- ================= VISTA: LISTA DE RECETAS ================= -->
       <template v-if="viewMode === 'lista'">
         <!-- Header Section -->
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 flex-shrink-0">
-          <div>
-            <h1 class="text-2xl md:text-3xl font-black text-gray-800 dark:text-white tracking-tight">Recetas</h1>
-            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Administración de recetario y costeo de insumos</p>
-          </div>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 class="text-xl sm:text-2xl font-bold text-gray-800 dark:text-white/90">Recetas</h1>
           <button 
             @click="abrirNuevaReceta"
-            class="flex items-center gap-2 px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold shadow-md shadow-brand-500/30 transition-all active:scale-95"
+            class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600 focus:outline-none focus:ring-4 focus:ring-brand-500/20 transition-colors"
           >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
             Agregar Nuevo
           </button>
         </div>
 
         <!-- Error Banner -->
-        <div v-if="apiError" class="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 dark:bg-red-500/10 dark:border-red-500/20 px-4 py-3 text-sm text-red-700 dark:text-red-400">
-          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
-          {{ apiError }}
+        <div v-if="apiError" class="flex items-center gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 dark:border-red-500/20 dark:bg-red-500/10">
+          <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" /></svg>
+          <p class="text-sm text-red-700 dark:text-red-400">{{ apiError }}</p>
         </div>
 
         <!-- Main Table -->
-        <div class="flex-1 overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] flex flex-col">
+        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
           <!-- Loading -->
           <div v-if="loading" class="flex items-center justify-center py-20">
             <svg class="w-8 h-8 animate-spin text-brand-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
@@ -56,23 +53,30 @@
                     <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ receta.nombre }}</p>
                   </td>
                   <td class="px-5 py-4 sm:px-6">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-400">
-                      ${{ Number(receta.costo).toFixed(2) }}
-                    </span>
+                    <p class="text-sm text-gray-800 font-medium dark:text-white/90">
+                      {{ Number(receta.costo).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}
+                    </p>
                   </td>
                   <td class="px-5 py-4 sm:px-6">
                     <p class="text-sm text-gray-600 dark:text-gray-400">{{ formatFecha(receta.created_at) }}</p>
                   </td>
                   <td class="px-5 py-4 sm:px-6 text-center">
-                    <div class="flex items-center justify-center gap-3">
-                      <button @click="verReceta(receta)" class="text-gray-400 hover:text-brand-500 transition-colors tooltip" title="Ver detalle">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    <div class="flex items-center justify-center gap-2">
+                      <button @click="verReceta(receta)" class="text-gray-500 hover:text-brand-500 transition-colors" title="Ver detalle">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
                       </button>
-                      <button @click="editarReceta(receta)" class="text-gray-400 hover:text-amber-500 transition-colors tooltip" title="Editar receta">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                      <button @click="editarReceta(receta)" class="text-gray-500 hover:text-blue-500 transition-colors" title="Editar receta">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
                       </button>
-                      <button @click="borrarReceta(receta)" class="text-gray-400 hover:text-red-500 transition-colors tooltip" title="Borrar receta">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      <button @click="borrarReceta(receta)" class="text-gray-500 hover:text-error-500 transition-colors" title="Borrar receta">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
                       </button>
                     </div>
                   </td>
@@ -186,17 +190,13 @@
 
                 <!-- Unidad -->
                 <div>
-                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Unidad uso</label>
-                  <select
-                    v-model="formIngrediente.unidad"
-                    required
-                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white"
-                  >
-                    <option value="" disabled>Seleccionar...</option>
-                    <option>Gramos (g)</option>
-                    <option>Mililitros (ml)</option>
-                    <option>Piezas (pz)</option>
-                  </select>
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Unidad de medida</label>
+                  <input
+                    type="text"
+                    :value="formIngrediente.unidad || 'Selecciona un insumo'"
+                    disabled
+                    class="w-full rounded-lg border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm text-gray-500 cursor-not-allowed dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
+                  />
                 </div>
 
                 <!-- Cantidad -->
@@ -259,7 +259,7 @@
                       <p class="text-sm text-gray-800 dark:text-white/90 font-medium">{{ ing.cantidad }}</p>
                     </td>
                     <td class="px-5 py-4 sm:px-6 text-right">
-                      <p class="text-sm text-brand-600 dark:text-brand-400 font-medium">${{ Number(ing.costo_calculado).toFixed(2) }}</p>
+                      <p class="text-sm text-brand-600 dark:text-brand-400 font-medium">${{ Number(ing.costo_calculado || 0).toFixed(2) }}</p>
                     </td>
                     <td class="px-5 py-4 text-center" v-if="viewMode !== 'ver'">
                       <button @click="removerIngrediente(idx)" class="text-gray-400 hover:text-red-500 transition-colors p-1" title="Remover">
@@ -353,8 +353,12 @@ const cerrarVista = () => {
 
 const verReceta = async (receta: Receta) => {
   try {
+    console.log("Intentando ver receta:", receta)
     const detalle = await getReceta(receta.id)
-    if (!detalle) return
+    if (!detalle) {
+      alert("Error: El servidor no devolvió detalles de la receta")
+      return
+    }
     busquedaReceta.value = detalle.nombre
     ingredientesLista.value = [...(detalle.ingredientes || [])]
     recetaEditando.value = detalle
@@ -366,8 +370,12 @@ const verReceta = async (receta: Receta) => {
 
 const editarReceta = async (receta: Receta) => {
   try {
+    console.log("Intentando editar receta:", receta)
     const detalle = await getReceta(receta.id)
-    if (!detalle) return
+    if (!detalle) {
+      alert("Error: El servidor no devolvió detalles de la receta")
+      return
+    }
     busquedaReceta.value = detalle.nombre
     ingredientesLista.value = [...(detalle.ingredientes || [])]
     recetaEditando.value = detalle
@@ -410,9 +418,8 @@ const inventarioFiltradoInsumo = computed(() => {
 const seleccionarInsumo = (item: InventarioItem) => {
   formIngrediente.producto = item.producto
   formIngrediente.costo_referencia = Number(item.costo_promedio) || 0
-  if (item.u_m === 'Kilos')   formIngrediente.unidad = 'Gramos (g)'
-  else if (item.u_m === 'Litros') formIngrediente.unidad = 'Mililitros (ml)'
-  else formIngrediente.unidad = 'Piezas (pz)'
+  // La unidad viene directamente del inventario, sin conversión
+  formIngrediente.unidad = item.u_m
   showSugerenciasInsumo.value = false
 }
 
@@ -437,10 +444,8 @@ const agregarIngrediente = () => {
   const productoReal = itemMatch.producto
   const costoRef = Number(itemMatch.costo_promedio) || 0
 
-  const factor = (formIngrediente.unidad === 'Gramos (g)' || formIngrediente.unidad === 'Mililitros (ml)')
-    ? 0.001 : 1
-
-  const costoCalc = formIngrediente.cantidad * costoRef * factor
+  // El costo se calcula con factor 1 porque la unidad del insumo coincide con la del inventario
+  const costoCalc = formIngrediente.cantidad * costoRef
 
   ingredientesLista.value.push({
     producto:         productoReal,
@@ -459,7 +464,7 @@ const removerIngrediente = (index: number) => {
 }
 
 const costoTotalReceta = computed(() =>
-  ingredientesLista.value.reduce((sum, item) => sum + item.costo_calculado, 0)
+  ingredientesLista.value.reduce((sum, item) => sum + Number(item.costo_calculado || 0), 0)
 )
 
 // ── Guardar / Actualizar ────────────────────────────────────
