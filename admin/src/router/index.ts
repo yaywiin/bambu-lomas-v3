@@ -86,18 +86,6 @@ const router = createRouter({
       meta: { title: 'POS' },
     },
     {
-      path: '/caja/pos/gestion',
-      name: 'POSMenuGestion',
-      component: () => import('../views/Pages/Caja/POSMenuGestion.vue'),
-      meta: { title: 'Gestión POS' },
-    },
-    {
-      path: '/caja/pos/gestion/:modulo',
-      name: 'POSSubModulo',
-      component: () => import('../views/Pages/Caja/POSSubModulo.vue'),
-      meta: { title: 'Módulo POS' },
-    },
-    {
       path: '/caja/ventas',
       name: 'Ventas',
       component: EnDesarrollo,
