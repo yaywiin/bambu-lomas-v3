@@ -50,7 +50,7 @@ const router = createRouter({
     {
       path: '/admin/recetas',
       name: 'Recetas',
-      component: EnDesarrollo,
+      component: () => import('../views/Pages/Administracion/Recetas.vue'),
       meta: { title: 'Recetas' },
     },
     {
