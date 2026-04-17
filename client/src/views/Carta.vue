@@ -49,6 +49,16 @@
         <div v-for="i in 6" :key="i" class="animate-pulse bg-white rounded-2xl h-80 shadow-sm border border-gray-100" />
       </div>
 
+      <!-- Error State -->
+      <div v-else-if="errorCarta" class="flex flex-col items-center justify-center py-24 text-center gap-4">
+        <div class="text-5xl">⚠️</div>
+        <p class="text-brand-800 font-bold text-lg">No pudimos cargar el menú</p>
+        <p class="text-brand-600 text-sm max-w-sm">{{ errorCarta }}</p>
+        <button @click="fetchCarta()" class="mt-2 px-5 py-2 bg-brand-500 text-white rounded-lg text-sm font-bold hover:bg-brand-600 transition-colors">
+          Reintentar
+        </button>
+      </div>
+
       <!-- Menu Grid con Animaciones -->
       <transition-group 
         v-else 
@@ -202,10 +212,15 @@ const categoriaActiva = ref('Todos')
 const productos = ref<any[]>([])
 const loading = ref(true)
 
+const API_BASE = import.meta.env.VITE_API_URL ?? ''
+
+const errorCarta = ref('')
+
 // Fetch real desde backend (misma db que admin)
 const fetchCarta = async () => {
   try {
-    const res = await fetch('/api/carta')
+    const res = await fetch(`${API_BASE}/carta`)
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
     const json = await res.json()
     if (json.success) {
       // Filtrar no disponibles
@@ -214,9 +229,12 @@ const fetchCarta = async () => {
       // Obtener categorías únicas
       const catSet = new Set(items.map((p: any) => p.categoria))
       categorias.value = Array.from(catSet) as string[]
+    } else {
+      errorCarta.value = 'No se pudo cargar el menú.'
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Error fetching menu:', err)
+    errorCarta.value = `Error al conectar con el servidor: ${err.message}`
   } finally {
     loading.value = false
   }
@@ -294,7 +312,7 @@ const enviarOrden = async () => {
   }))
 
   try {
-    const res = await fetch('/api/ordenes_remotas', {
+    const res = await fetch(`${API_BASE}/ordenes_remotas`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
