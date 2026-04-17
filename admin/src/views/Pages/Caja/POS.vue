@@ -389,12 +389,14 @@ import AdminLayout from '@/components/layout/AdminLayout.vue'
 import { useMesas } from '@/composables/useMesas'
 import { useVentas } from '@/composables/useVentas'
 import { useAuth } from '@/composables/useAuth'
+import { useOrdenes } from '@/composables/useOrdenes'
 
 const route = useRoute()
 const router = useRouter()
 const { obtenerMesa, actualizarOrdenMesa, liberarMesa } = useMesas()
 const { registrarVenta } = useVentas()
 const { currentUser } = useAuth()
+const { obtenerOrden, cambiarEstado } = useOrdenes()
 
 // Estado del UI
 const categorias = ['Todos', 'Bebida Caliente', 'Bebida Fria', 'Panaderia', 'Comida', 'Postres', 'Extras']
@@ -539,13 +541,15 @@ const reducirCantidad = (item: OrdenItem) => {
 // Estado del Modal de Cobro
 const showModalCobro = ref(false)
 const metodosDePago = ['Efectivo', 'Tarjeta', 'Transferencia']
+const clientePreasignado = ref('')
+
 const datosCobro = reactive({
   nombre: '',
   metodo: 'Efectivo'
 })
 
 const abrirCobro = () => {
-  datosCobro.nombre = ''
+  datosCobro.nombre = clientePreasignado.value || ''
   datosCobro.metodo = 'Efectivo'
   showModalCobro.value = true
 }
@@ -595,6 +599,12 @@ const aceptarCierre = () => {
     liberarMesa(mesaId)
     router.push('/caja/mesas')
   }
+
+  // Marcar orden remota como cobrada si venimos del Kanban
+  if (route.query.orden_remota) {
+    cambiarEstado(route.query.orden_remota as string, 'cobrado')
+    router.push('/caja/ordenes')
+  }
 }
 
 // Base de datos local mock de productos con precios integrados
@@ -610,6 +620,26 @@ onMounted(async () => {
     const mesaActiva = obtenerMesa(mesaId)
     if (mesaActiva && mesaActiva.orden.length > 0) {
       orden.value = [...(mesaActiva.orden as OrdenItem[])]
+    }
+  }
+
+  if (route.query.orden_remota) {
+    const oId = route.query.orden_remota as string
+    const ordenRemota = obtenerOrden(oId)
+    if (ordenRemota) {
+      mockFolio.value = ordenRemota.id
+      datosCobro.nombre = ordenRemota.cliente
+      clientePreasignado.value = ordenRemota.cliente
+      
+      // Transformar OrdenRemotaItem a OrdenItem
+      orden.value = ordenRemota.items.map((item, idx) => ({
+        id: `rm-${idx}-${Date.now()}`,
+        producto: item.producto,
+        cantidad: item.cantidad,
+        precio: item.precio,
+        extras: item.extras || [],
+        extrasStr: item.extras ? item.extras.join(', ') : ''
+      }))
     }
   }
 

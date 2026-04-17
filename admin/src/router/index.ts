@@ -76,7 +76,7 @@ const router = createRouter({
     {
       path: '/caja/ordenes',
       name: 'Ordenes',
-      component: EnDesarrollo,
+      component: () => import('../views/Pages/Caja/Ordenes.vue'),
       meta: { title: 'Órdenes' },
     },
     {

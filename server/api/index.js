@@ -39,6 +39,7 @@ app.use('/api/inventario', require('../routes/inventario'))
 app.use('/api/recetas',    require('../routes/recetas'))
 app.use('/api/carta',      require('../routes/carta'))
 app.use('/api/upload',     require('../routes/upload'))
+app.use('/api/ordenes_remotas', require('../routes/ordenes'))
 
 // ── Health check ──────────────────────────────────────────────
 app.get('/api/health', async (req, res) => {
