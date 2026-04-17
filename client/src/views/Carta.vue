@@ -150,7 +150,7 @@
 
           <!-- Product in Cart -->
           <div v-for="item in cart" :key="item.id" class="flex gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-800">
-            <img :src="item.producto.foto || getDefaultImage(item.producto.categoria)" class="w-20 h-20 object-cover rounded-lg" />
+            <img :src="item.producto.foto_principal || getDefaultImage(item.producto.categoria)" class="w-20 h-20 object-cover rounded-lg" />
             <div class="flex-1 flex flex-col justify-between">
               <div>
                 <h4 class="font-bold text-gray-800 dark:text-gray-200 text-sm">{{ item.producto.nombre }}</h4>
