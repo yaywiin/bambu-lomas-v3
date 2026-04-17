@@ -87,7 +87,3 @@ const onClickMesa = (mesa: any) => {
   router.push({ path: '/caja/pos', query: { mesa: mesa.id } })
 }
 </script>
-
-<style scoped>
-/* Agrega animaciones o estilos extras en caso de que quieras más vida */
-</style>

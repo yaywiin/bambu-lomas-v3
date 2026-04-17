@@ -1,6 +1,7 @@
 require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
+const pool = require('./db')
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -51,7 +52,6 @@ app.use('/api/upload',     require('./routes/upload'))
 
 // Ruta raíz: health check
 app.get('/api/health', async (req, res) => {
-  const pool = require('./db')
   try {
     await pool.query('SELECT 1')
     res.json({ success: true, message: 'API funcionando y BD conectada ✅', timestamp: new Date() })

@@ -127,7 +127,6 @@ const { login } = useAuth()
 const usuario = ref('')
 const password = ref('')
 const showPassword = ref(false)
-const keepLoggedIn = ref(false)
 const loading = ref(false)
 const errorMsg = ref('')
 
