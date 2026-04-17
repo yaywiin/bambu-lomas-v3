@@ -201,6 +201,29 @@
       </div>
     </div>
     
+    <!-- Modal de Orden Exitosa -->
+    <div v-if="showSuccessModal" class="fixed inset-0 z-[60] flex items-center justify-center px-4">
+      <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="showSuccessModal = false"></div>
+      <div class="bg-white dark:bg-gray-800 rounded-3xl p-8 max-w-sm w-full mx-auto relative z-10 shadow-2xl transform transition-all text-center">
+        <div class="w-20 h-20 bg-green-100 dark:bg-green-900/30 text-green-500 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
+          <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+        </div>
+        <h3 class="text-2xl font-black text-gray-900 dark:text-white mb-2">¡Orden Recibida!</h3>
+        <p class="text-gray-500 dark:text-gray-400 font-medium mb-6">
+          Tu pedido está en la cocina preparándose con amor. 
+          <br><br>
+          <span class="text-xs uppercase tracking-wider text-brand-600 dark:text-brand-400 font-bold">Folio de Orden</span><br>
+          <span class="text-3xl font-black text-gray-900 dark:text-white">#{{ orderFolio }}</span>
+        </p>
+        <button 
+          @click="showSuccessModal = false"
+          class="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-lg shadow-brand-500/30 transition-all active:scale-95"
+        >
+          ¡Excelente!
+        </button>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -273,6 +296,9 @@ const showCart = ref(false)
 const customerName = ref('')
 const isSending = ref(false)
 
+const showSuccessModal = ref(false)
+const orderFolio = ref('')
+
 const addToCart = (producto: any) => {
   const exist = cart.value.find(c => c.producto.id === producto.id)
   if (exist) {
@@ -324,11 +350,16 @@ const enviarOrden = async () => {
 
     const json = await res.json()
     if (json.success) {
-      alert(`¡Tu orden fue recibida! Número de orden: ${json.data.id}. Estamos preparándola en la cocina.`)
-      // Clean up
+      // Limpiar carrito
       cart.value = []
       showCart.value = false
       customerName.value = ''
+      
+      // Mostrar modal de éxito
+      orderFolio.value = json.data.id || 'Nuevo'
+      showSuccessModal.value = true
+    } else {
+      alert("No se pudo procesar la orden: " + (json.message || "Error desconocido"))
     }
   } catch(err) {
     alert("Error al enviar la orden. Verifica la conexión.")

@@ -25,3 +25,11 @@ body {
     color: white;
   }
 }
+
+button:hover {
+  cursor: pointer;
+}
+
+button:disabled, button:disabled:hover {
+  cursor: not-allowed;
+}
