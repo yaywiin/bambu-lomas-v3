@@ -661,16 +661,27 @@ const formVacio = (): Omit<CartaItem, 'id'> => ({
 
 const form = reactive(formVacio())
 
-// ── Local storage (datos locales mientras no hay API) ────────
-const STORAGE_KEY = 'bambu_carta'
+// ── API ──────────────────────────────────────────────────────
+const API_CARTA = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api') + '/carta'
 
-const cargarItems = () => {
+async function apiCarta<T>(url: string, options: RequestInit = {}): Promise<T> {
+  const res = await fetch(url, {
+    headers: { 'Content-Type': 'application/json' },
+    ...options
+  })
+  const json = await res.json()
+  if (!res.ok || !json.success) throw new Error(json.message || `Error ${res.status}`)
+  return json.data as T
+}
+
+// ── Cargar ────────────────────────────────────────────────────
+const cargarItems = async () => {
   loading.value = true
+  apiError.value = ''
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    items.value = raw ? JSON.parse(raw) : []
-  } catch {
-    items.value = []
+    items.value = await apiCarta<CartaItem[]>(API_CARTA)
+  } catch (err: any) {
+    apiError.value = 'No se pudo cargar la carta: ' + err.message
   } finally {
     loading.value = false
   }
@@ -713,10 +724,6 @@ const llenarForm = (item: CartaItem) => {
   busquedaReceta.value = item.receta_nombre || ''
 }
 
-const persistir = () => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(items.value))
-}
-
 // ── Navegación ───────────────────────────────────────────────
 const abrirNuevo = () => {
   resetForm()
@@ -740,63 +747,67 @@ const cerrar = () => {
   viewMode.value = 'lista'
 }
 
-const borrarItem = (item: CartaItem) => {
+const borrarItem = async (item: CartaItem) => {
   if (!confirm(`¿Eliminar "${item.nombre}" de la carta?`)) return
-  items.value = items.value.filter(i => i.id !== item.id)
-  persistir()
+  try {
+    await apiCarta(`${API_CARTA}/${item.id}`, { method: 'DELETE' })
+    items.value = items.value.filter(i => i.id !== item.id)
+  } catch (err: any) {
+    alert('Error al eliminar: ' + err.message)
+  }
 }
 
-const toggleDisponible = (item: CartaItem) => {
-  item.disponible = !item.disponible
-  persistir()
+const toggleDisponible = async (item: CartaItem) => {
+  try {
+    await apiCarta(`${API_CARTA}/${item.id}/disponible`, {
+      method: 'PATCH',
+      body: JSON.stringify({ disponible: !item.disponible })
+    })
+    item.disponible = !item.disponible
+  } catch (err: any) {
+    alert('Error al cambiar disponibilidad: ' + err.message)
+  }
 }
 
 // ── Guardar ──────────────────────────────────────────────────
-const guardar = () => {
+const guardar = async () => {
   if (!form.nombre.trim()) { alert('Debes ingresar un nombre para el platillo'); return }
   if (!form.categoria) { alert('Debes seleccionar una categoría'); return }
   if (!form.precio || form.precio <= 0) { alert('El precio debe ser mayor a 0'); return }
 
   saving.value = true
+  const payload = {
+    nombre:           form.nombre.trim(),
+    receta_id:        form.receta_id,
+    receta_nombre:    form.receta_nombre,
+    categoria:        form.categoria,
+    descripcion:      form.descripcion,
+    stock:            form.stock,
+    precio:           form.precio,
+    foto_principal:   form.foto_principal,
+    galeria:          form.galeria,
+    tiene_variaciones: form.tiene_variaciones,
+    grupos_variacion: form.grupos_variacion,
+    disponible:       form.disponible
+  }
   try {
     if (viewMode.value === 'nueva') {
-      const nuevo: CartaItem = {
-        id: Date.now(),
-        nombre: form.nombre.trim(),
-        receta_id: form.receta_id,
-        receta_nombre: form.receta_nombre,
-        categoria: form.categoria,
-        descripcion: form.descripcion,
-        stock: form.stock,
-        precio: form.precio,
-        foto_principal: form.foto_principal,
-        galeria: [...form.galeria],
-        tiene_variaciones: form.tiene_variaciones,
-        grupos_variacion: JSON.parse(JSON.stringify(form.grupos_variacion)),
-        disponible: true
-      }
+      const nuevo = await apiCarta<CartaItem>(API_CARTA, {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      })
       items.value.unshift(nuevo)
     } else {
+      const actualizado = await apiCarta<CartaItem>(`${API_CARTA}/${editandoId.value}`, {
+        method: 'PUT',
+        body: JSON.stringify(payload)
+      })
       const idx = items.value.findIndex(i => i.id === editandoId.value)
-      if (idx !== -1) {
-        items.value[idx] = {
-          ...items.value[idx],
-          nombre: form.nombre.trim(),
-          receta_id: form.receta_id,
-          receta_nombre: form.receta_nombre,
-          categoria: form.categoria,
-          descripcion: form.descripcion,
-          stock: form.stock,
-          precio: form.precio,
-          foto_principal: form.foto_principal,
-          galeria: [...form.galeria],
-          tiene_variaciones: form.tiene_variaciones,
-          grupos_variacion: JSON.parse(JSON.stringify(form.grupos_variacion))
-        }
-      }
+      if (idx !== -1) items.value[idx] = actualizado
     }
-    persistir()
     cerrar()
+  } catch (err: any) {
+    alert('Error al guardar: ' + err.message)
   } finally {
     saving.value = false
   }

@@ -34,6 +34,7 @@ app.use('/api/compras/:compraId/desglose', require('../routes/compras_desglose')
 app.use('/api/gastos',     require('../routes/gastos'))
 app.use('/api/inventario', require('../routes/inventario'))
 app.use('/api/recetas',    require('../routes/recetas'))
+app.use('/api/carta',      require('../routes/carta'))
 app.use('/api/upload',     require('../routes/upload'))
 
 // ── Health check ──────────────────────────────────────────────
