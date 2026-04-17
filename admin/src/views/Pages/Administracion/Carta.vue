@@ -228,7 +228,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <!-- Receta -->
                   <div>
-                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Receta base (Estadística) <span class="text-gray-400 font-normal">(opcional)</span></label>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Receta base <span class="text-gray-400 font-normal">(opcional)</span></label>
 
                     <!-- Solo lectura -->
                     <div v-if="viewMode === 'ver'" class="w-full rounded-lg border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
