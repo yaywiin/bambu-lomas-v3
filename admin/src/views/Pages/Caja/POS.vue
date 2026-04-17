@@ -157,12 +157,23 @@
           </div>
         </div>
 
-        <!-- Products Grid -->
         <div class="flex-1 overflow-y-auto custom-scrollbar pb-24 flex flex-col">
-          <div class="grid grid-cols-2 lg:grid-cols-3 mx-auto max-w-4xl xl:grid-cols-4 gap-6 p-2 flex-1 content-start w-full">
+          <!-- Loading state -->
+          <div v-if="loadingProductos" class="flex-1 flex items-center justify-center py-20">
+            <div class="flex flex-col items-center gap-3 text-gray-400">
+              <svg class="w-10 h-10 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+              </svg>
+              <p class="text-sm font-medium">Cargando carta...</p>
+            </div>
+          </div>
+
+          <div v-else class="grid grid-cols-2 lg:grid-cols-3 mx-auto max-w-4xl xl:grid-cols-4 gap-6 p-2 flex-1 content-start w-full">
             <!-- Product Cards -->
             <button 
               v-for="prod in productosPaginados" :key="prod.nombre"
+
               @click="handleProductClick(prod)"
               class="group relative flex flex-col items-center transition-all duration-200 hover:-translate-y-1"
             >
@@ -550,16 +561,25 @@ const aceptarCierre = () => {
 // Base de datos local mock de productos con precios integrados
 const todosLosProductos = ref<any[]>([])
 
-onMounted(() => {
+// Cargar productos desde la API (carta en BD)
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+const loadingProductos = ref(false)
+
+onMounted(async () => {
+  loadingProductos.value = true
   try {
-    const raw = localStorage.getItem('bambu_carta')
-    if (raw) {
-      todosLosProductos.value = JSON.parse(raw).filter((p: any) => p.disponible !== false)
+    const res = await fetch(`${API_BASE}/carta`)
+    const json = await res.json()
+    if (json.success) {
+      todosLosProductos.value = (json.data as any[]).filter((p: any) => p.disponible !== false)
     }
   } catch (e) {
-    console.error('Error al cargar la carta desde localStorage', e)
+    console.error('Error al cargar la carta desde el servidor', e)
+  } finally {
+    loadingProductos.value = false
   }
 })
+
 
 const productosFiltrados = computed(() => {
   return todosLosProductos.value.filter(p => p.categoria === categoriaActiva.value)
