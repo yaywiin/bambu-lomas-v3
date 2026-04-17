@@ -202,7 +202,6 @@
         </div>
 
       </div>
-      </div>
     </div>
     
     <!-- Modal Seleccionador de Variaciones -->
