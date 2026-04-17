@@ -96,7 +96,7 @@
             </div>
             
             <button 
-              @click="addToCart(producto)"
+              @click="openVariationModal(producto)"
               class="w-full py-2.5 bg-brand-500 hover:bg-brand-600 text-white shadow-md shadow-brand-500/20 active:scale-95 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -154,7 +154,10 @@
             <div class="flex-1 flex flex-col justify-between">
               <div>
                 <h4 class="font-bold text-gray-800 dark:text-gray-200 text-sm">{{ item.producto.nombre }}</h4>
-                <p class="font-semibold text-brand-600 dark:text-brand-400 text-sm mt-1">${{ Number(item.producto.precio).toFixed(2) }}</p>
+                <p v-if="item.variaciones && item.variaciones.length" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5 max-w-[180px] truncate">
+                  {{ item.variaciones.map(v => v.variacion).join(', ') }}
+                </p>
+                <p class="font-semibold text-brand-600 dark:text-brand-400 text-sm mt-1">${{ Number(cartItemPrice(item)).toFixed(2) }}</p>
               </div>
               <div class="flex items-center justify-between mt-2">
                 <div class="flex items-center border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900">
@@ -198,6 +201,56 @@
           </div>
         </div>
 
+      </div>
+      </div>
+    </div>
+    
+    <!-- Modal Seleccionador de Variaciones -->
+    <div v-if="selectedProductVariations" class="fixed inset-0 z-[70] flex items-center justify-center px-4">
+      <div class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm" @click="selectedProductVariations = null"></div>
+      <div class="bg-white dark:bg-gray-800 rounded-3xl w-full max-w-lg mx-auto relative z-10 shadow-2xl flex flex-col max-h-[90vh]">
+        <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
+          <h3 class="text-xl font-bold text-gray-900 dark:text-white">Opciones para {{ selectedProductVariations.nombre }}</h3>
+          <button @click="selectedProductVariations = null" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+        
+        <div class="flex-1 overflow-y-auto px-6 py-4 space-y-6 custom-scrollbar">
+          <div v-for="grupo in selectedProductVariations.grupos_variacion" :key="grupo.nombre">
+            <h4 class="font-black text-sm uppercase text-brand-600 dark:text-brand-400 mb-3 tracking-wider">{{ grupo.nombre }}</h4>
+            <div class="space-y-2">
+              <label 
+                v-for="opcion in grupo.opciones" :key="opcion.variacion"
+                class="flex items-center justify-between p-3 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-brand-300 dark:hover:border-brand-600 cursor-pointer transition-colors bg-gray-50 dark:bg-gray-900/50"
+              >
+                <div class="flex items-center gap-3">
+                  <input 
+                    type="checkbox" 
+                    :checked="selectedVariations.some(v => v.variacion === opcion.variacion)" 
+                    @change="toggleVariation(opcion)" 
+                    class="w-5 h-5 text-brand-500 rounded border-gray-300 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-600"
+                  />
+                  <span class="font-medium text-gray-800 dark:text-gray-200">{{ opcion.variacion }}</span>
+                </div>
+                <span v-if="opcion.precio_adicional > 0" class="text-sm font-semibold text-brand-600 dark:text-brand-400">
+                  +${{ parseFloat(opcion.precio_adicional).toFixed(2) }}
+                </span>
+                <span v-else class="text-xs text-gray-400">Sin cargo extra</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-b-3xl">
+          <button 
+            @click="addToCart(selectedProductVariations, selectedVariations)"
+            class="w-full py-3.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-lg shadow-brand-500/30 transition-all flex items-center justify-between px-6"
+          >
+            <span>Agregar y Continuar</span>
+            <span class="text-brand-100 border-l border-brand-400/50 pl-4">${{ productVariationPrice.toFixed(2) }}</span>
+          </button>
+        </div>
       </div>
     </div>
     
@@ -289,6 +342,7 @@ interface CartItem {
   id: string; // key unica en carrito
   producto: any;
   cantidad: number;
+  variaciones: any[];
 }
 
 const cart = ref<CartItem[]>([])
@@ -299,17 +353,61 @@ const isSending = ref(false)
 const showSuccessModal = ref(false)
 const orderFolio = ref('')
 
-const addToCart = (producto: any) => {
-  const exist = cart.value.find(c => c.producto.id === producto.id)
+// Lógica de Modal de Variaciones
+const selectedProductVariations = ref<any>(null)
+const selectedVariations = ref<any[]>([])
+
+const openVariationModal = (producto: any) => {
+  if (producto.tiene_variaciones && producto.grupos_variacion && producto.grupos_variacion.length > 0) {
+    selectedProductVariations.value = producto
+    selectedVariations.value = []
+  } else {
+    addToCart(producto, [])
+  }
+}
+
+const toggleVariation = (option: any) => {
+  const idx = selectedVariations.value.findIndex(v => v.variacion === option.variacion)
+  if (idx >= 0) {
+    selectedVariations.value.splice(idx, 1)
+  } else {
+    selectedVariations.value.push(option)
+  }
+}
+
+const productVariationPrice = computed(() => {
+  if (!selectedProductVariations.value) return 0
+  let base = parseFloat(selectedProductVariations.value.precio) || 0
+  selectedVariations.value.forEach(v => base += parseFloat(v.precio_adicional || 0))
+  return base
+})
+
+const cartItemPrice = (item: CartItem) => {
+  let base = parseFloat(item.producto.precio) || 0
+  item.variaciones.forEach(v => base += parseFloat(v.precio_adicional || 0))
+  return base
+}
+
+const addToCart = (producto: any, variaciones: any[] = []) => {
+  // Crear ID único basado en producto y opciones seleccionadas (ordenadas para que repeticiones coincidan)
+  const varsStr = variaciones.map(v => v.variacion).sort().join('|')
+  const cartId = `${producto.id}_${varsStr}`
+
+  const exist = cart.value.find(c => c.id === cartId)
   if (exist) {
     exist.cantidad++
   } else {
     cart.value.push({
-      id: Date.now().toString(),
+      id: cartId,
       producto,
-      cantidad: 1
+      cantidad: 1,
+      variaciones: [...variaciones]
     })
   }
+
+  // Cerrar selecciones y mostrar carrito
+  selectedProductVariations.value = null
+  selectedVariations.value = []
   showCart.value = true
 }
 
@@ -323,7 +421,7 @@ const updateQty = (item: CartItem, delta: number) => {
 }
 
 const cartTotalItems = computed(() => cart.value.reduce((acc, c) => acc + c.cantidad, 0))
-const cartTotalAmount = computed(() => cart.value.reduce((acc, c) => acc + (c.cantidad * parseFloat(c.producto.precio)), 0))
+const cartTotalAmount = computed(() => cart.value.reduce((acc, c) => acc + (c.cantidad * cartItemPrice(c)), 0))
 
 // ----- POST ORDER TO ADMIN KANBAN -----
 const enviarOrden = async () => {
@@ -331,11 +429,17 @@ const enviarOrden = async () => {
   isSending.value = true
   
   // Mapear al modelo que espera Kanban
-  const orderItems = cart.value.map(c => ({
-    producto: c.producto.nombre,
-    cantidad: c.cantidad,
-    precio: parseFloat(c.producto.precio)
-  }))
+  const orderItems = cart.value.map(c => {
+    let name = c.producto.nombre
+    if (c.variaciones && c.variaciones.length > 0) {
+      name += ` (${c.variaciones.map((v: any) => v.variacion).join(', ')})`
+    }
+    return {
+      producto: name,
+      cantidad: c.cantidad,
+      precio: cartItemPrice(c)
+    }
+  })
 
   try {
     const res = await fetch(`${API_BASE}/ordenes_remotas`, {
