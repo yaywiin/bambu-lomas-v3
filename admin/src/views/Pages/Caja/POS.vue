@@ -168,9 +168,9 @@
             >
               <div class="w-full aspect-square bg-white dark:bg-gray-800 rounded-[2rem] relative overflow-hidden shadow-sm group-hover:shadow-lg transition-all border border-gray-100 dark:border-gray-700">
                 <img 
-                  src="https://images.unsplash.com/photo-1559525839-b184a4d698c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" 
+                  :src="prod.foto_principal || 'https://images.unsplash.com/photo-1559525839-b184a4d698c7?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80'" 
                   class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-out" 
-                  alt="Product"
+                  :alt="prod.nombre"
                 />
                 
                 <!-- Price Overlay -->
@@ -241,65 +241,30 @@
       </div>
     </div>
 
-    <!-- ================= MODAL: PERSONALIZACIÓN DE BEBIDA ================= -->
-    <div v-if="showModalLeche" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+    <!-- ================= MODAL: PERSONALIZACIÓN DE BEBIDA (VARIACIONES) ================= -->
+    <div v-if="showModalVariaciones" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
       <div class="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-800 animate-in fade-in zoom-in duration-200">
         
         <div class="p-6 border-b border-gray-100 dark:border-gray-800 text-center">
-          <h3 class="text-xl font-bold text-gray-800 dark:text-white">Personalizar Bebida</h3>
-          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ itemPendiente?.nombre }}</p>
+          <h3 class="text-2xl font-bold text-gray-800 dark:text-white">{{ itemPendiente?.nombre }}</h3>
         </div>
 
-        <div class="p-6 space-y-6">
-          <!-- Tipo de leche -->
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Tipo de Leche</label>
-            <div class="grid grid-cols-2 gap-2">
+        <div class="p-6 space-y-6 max-h-[50vh] overflow-y-auto custom-scrollbar">
+          <div v-for="grupo in itemPendiente?.grupos_variacion" :key="grupo.nombre">
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">{{ grupo.nombre }}</label>
+            <div class="grid grid-cols-2 gap-3">
               <button 
-                v-for="leche in tiposDeLeche" :key="leche"
-                @click="personalizacion.tipoLeche = leche"
-                :class="['px-3 py-2 text-sm font-medium rounded-xl border transition-all',
-                  personalizacion.tipoLeche === leche
-                    ? 'bg-brand-50 border-brand-500 text-brand-700 dark:bg-brand-500/20 dark:text-brand-400'
-                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300'
+                v-for="opcion in grupo.opciones" :key="opcion.variacion"
+                @click="toggleVariacion(grupo.nombre, opcion)"
+                :class="['p-4 text-base font-semibold rounded-2xl border transition-all flex flex-col items-center justify-center text-center gap-1 min-h-[80px]',
+                  variacionesSeleccionadas[grupo.nombre]?.variacion === opcion.variacion
+                    ? 'bg-brand-50 border-brand-500 text-brand-700 shadow-md dark:bg-brand-500/20 dark:border-brand-500/50 dark:text-brand-400'
+                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm dark:bg-gray-800 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-700/50'
                 ]"
               >
-                {{ leche }}
+                <span>{{ opcion.variacion }}</span>
+                <span v-if="opcion.precio_adicional > 0" class="text-xs font-bold text-brand-600 dark:text-brand-400 opacity-90">(+${{ Number(opcion.precio_adicional).toFixed(2) }})</span>
               </button>
-            </div>
-          </div>
-
-          <!-- Endulzantes -->
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Endulzantes</label>
-            <div class="space-y-3">
-              <!-- Azúcar -->
-              <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl">
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Azúcar (cucharadas)</span>
-                <div class="flex items-center gap-4">
-                  <button @click="quitarCucharada('azucar')" :disabled="personalizacion.azucar === 0" class="w-8 h-8 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center disabled:opacity-50 text-gray-600 dark:text-gray-300 hover:bg-gray-100 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
-                  </button>
-                  <span class="w-4 text-center font-bold text-gray-800 dark:text-white">{{ personalizacion.azucar }}</span>
-                  <button @click="agregarCucharada('azucar')" :disabled="personalizacion.azucar === 5" class="w-8 h-8 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center disabled:opacity-50 text-gray-600 dark:text-gray-300 hover:bg-gray-100 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                  </button>
-                </div>
-              </div>
-              
-              <!-- Splenda -->
-              <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-800/50 p-3 rounded-xl">
-                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">Splenda (sobres)</span>
-                <div class="flex items-center gap-4">
-                  <button @click="quitarCucharada('splenda')" :disabled="personalizacion.splenda === 0" class="w-8 h-8 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center disabled:opacity-50 text-gray-600 dark:text-gray-300 hover:bg-gray-100 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg>
-                  </button>
-                  <span class="w-4 text-center font-bold text-gray-800 dark:text-white">{{ personalizacion.splenda }}</span>
-                  <button @click="agregarCucharada('splenda')" :disabled="personalizacion.splenda === 5" class="w-8 h-8 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 flex items-center justify-center disabled:opacity-50 text-gray-600 dark:text-gray-300 hover:bg-gray-100 transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -318,7 +283,7 @@
     </div>
 
     <!-- ================= MODAL: COBRO ================= -->
-    <div v-if="showModalCobro" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+    <div v-if="showModalCobro" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
       <div class="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-md shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-800 animate-in fade-in zoom-in duration-200">
         
         <div class="p-6 border-b border-gray-100 dark:border-gray-800 text-center">
@@ -380,7 +345,7 @@
     </div>
 
     <!-- ================= MODAL: ADVERTENCIA DE CIERRE ================= -->
-    <div v-if="showModalCierreAdvertencia" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
+    <div v-if="showModalCierreAdvertencia" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm">
       <div class="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-sm shadow-2xl overflow-hidden border border-gray-100 dark:border-gray-800 animate-in fade-in zoom-in duration-200">
         <div class="p-8 text-center space-y-4">
           <div class="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-2">
@@ -404,7 +369,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, watch } from 'vue'
+import { ref, computed, reactive, watch, onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 
 // Estado del UI
@@ -457,73 +422,70 @@ const calcularTotal = computed(() => {
   return orden.value.reduce((sum, item) => sum + (item.precio * item.cantidad), 0)
 })
 
-// Estado del Modal de Personalización
-const showModalLeche = ref(false)
+// Estado del Modal de Personalización (Variaciones)
+const showModalVariaciones = ref(false)
 const itemPendiente = ref<any>(null)
-const tiposDeLeche = ['Entera', 'Deslactosada', 'Almendra', 'Avena', 'Coco', 'Soya']
 
-const personalizacion = reactive({
-  tipoLeche: 'Entera',
-  azucar: 0,
-  splenda: 0
-})
+// Guardamos la opción seleccionada por grupo. Ej: { "Leches": { variacion: "Avena", precio_adicional: 15 } }
+const variacionesSeleccionadas = ref<Record<string, any>>({})
 
-const agregarCucharada = (tipo: 'azucar' | 'splenda') => {
-  if (personalizacion[tipo] < 5) personalizacion[tipo]++
-}
-const quitarCucharada = (tipo: 'azucar' | 'splenda') => {
-  if (personalizacion[tipo] > 0) personalizacion[tipo]--
+const toggleVariacion = (grupoNombre: string, opcion: any) => {
+  if (variacionesSeleccionadas.value[grupoNombre]?.variacion === opcion.variacion) {
+    delete variacionesSeleccionadas.value[grupoNombre]
+  } else {
+    variacionesSeleccionadas.value[grupoNombre] = opcion
+  }
 }
 
 const handleProductClick = (prod: any) => {
-  const requiereLeche = /latte|capuchino|frappé|chocolate|mocha|macchiato|chai|smoothie|flat white|affogato/i.test(prod.nombre)
-  
-  if (requiereLeche) {
+  if (prod.tiene_variaciones && prod.grupos_variacion && prod.grupos_variacion.length > 0) {
     itemPendiente.value = prod
-    personalizacion.tipoLeche = 'Entera'
-    personalizacion.azucar = 0
-    personalizacion.splenda = 0
-    showModalLeche.value = true
+    variacionesSeleccionadas.value = {}
+    showModalVariaciones.value = true
   } else {
     // Agregar directo sin modal
-    agregarAOrden(prod, [])
+    agregarAOrden(prod, [], 0)
   }
 }
 
 const seleccionarBusqueda = (prod: any) => {
-  // Opcional: auto-navegar al tab del producto
   categoriaActiva.value = prod.categoria
   searchQuery.value = ''
   searchFocused.value = false
-  // Lanza el flujo habitual (evalúa si requiere modal por tipo o directo a orden)
   handleProductClick(prod)
 }
 
 const cancelarPersonalizacion = () => {
-  showModalLeche.value = false
+  showModalVariaciones.value = false
   itemPendiente.value = null
 }
 
 const confirmarPersonalizacion = () => {
   const extras: string[] = []
-  if (personalizacion.tipoLeche !== 'Entera') {
-    extras.push(`Leche de ${personalizacion.tipoLeche}`)
-  }
-  if (personalizacion.azucar > 0) {
-    extras.push(`${personalizacion.azucar}x Azúcar`)
-  }
-  if (personalizacion.splenda > 0) {
-    extras.push(`${personalizacion.splenda}x Splenda`)
+  let costoExtraTotal = 0
+
+  for (const grupo in variacionesSeleccionadas.value) {
+    const opcion = variacionesSeleccionadas.value[grupo]
+    if (opcion) {
+      if (opcion.precio_adicional > 0) {
+        extras.push(`+ ${opcion.variacion} (+$${opcion.precio_adicional})`)
+        costoExtraTotal += Number(opcion.precio_adicional)
+      } else {
+         extras.push(`+ ${opcion.variacion}`)
+      }
+    }
   }
   
-  agregarAOrden(itemPendiente.value, extras)
-  showModalLeche.value = false
+  agregarAOrden(itemPendiente.value, extras, costoExtraTotal)
+  showModalVariaciones.value = false
   itemPendiente.value = null
 }
 
-const agregarAOrden = (prod: any, extras: string[]) => {
+const agregarAOrden = (prod: any, extras: string[], costoExtraTotal: number) => {
   const extrasStr = extras.join(', ')
-  const existing = orden.value.find(o => o.producto === prod.nombre && o.extrasStr === extrasStr)
+  const precioFinal = Number(prod.precio) + costoExtraTotal
+  
+  const existing = orden.value.find(o => o.producto === prod.nombre && o.extrasStr === extrasStr && o.precio === precioFinal)
   
   if (existing) {
     existing.cantidad++
@@ -532,7 +494,7 @@ const agregarAOrden = (prod: any, extras: string[]) => {
       id: Date.now().toString() + Math.random().toString(),
       cantidad: 1,
       producto: prod.nombre,
-      precio: prod.precio,
+      precio: precioFinal,
       extras: extras,
       extrasStr: extrasStr
     })
@@ -586,82 +548,21 @@ const aceptarCierre = () => {
 }
 
 // Base de datos local mock de productos con precios integrados
-const todosLosProductos = [
-  // BEBIDA CALIENTE
-  { categoria: 'Bebida Caliente', nombre: 'Espresso Americano', precio: 45 },
-  { categoria: 'Bebida Caliente', nombre: 'Capuchino Italiano', precio: 65 },
-  { categoria: 'Bebida Caliente', nombre: 'Latte Macchiato', precio: 70 },
-  { categoria: 'Bebida Caliente', nombre: 'Flat White', precio: 68 },
-  { categoria: 'Bebida Caliente', nombre: 'Mocha Caliente', precio: 75 },
-  { categoria: 'Bebida Caliente', nombre: 'Chocolate Abuelita', precio: 55 },
-  { categoria: 'Bebida Caliente', nombre: 'Espresso Sencillo', precio: 35 },
-  { categoria: 'Bebida Caliente', nombre: 'Té Chai Latte Caliente', precio: 75 },
-  { categoria: 'Bebida Caliente', nombre: 'Infusión Herbal (Manzanilla/Menta)', precio: 50 },
-  { categoria: 'Bebida Caliente', nombre: 'Tisana Frutal Caliente', precio: 60 },
+const todosLosProductos = ref<any[]>([])
 
-  // BEBIDA FRÍA
-  { categoria: 'Bebida Fria', nombre: 'Iced Latte', precio: 70 },
-  { categoria: 'Bebida Fria', nombre: 'Frappé Cookies & Cream', precio: 95 },
-  { categoria: 'Bebida Fria', nombre: 'Cold Brew Tonic', precio: 85 },
-  { categoria: 'Bebida Fria', nombre: 'Smoothie de Frutos Rojos', precio: 80 },
-  { categoria: 'Bebida Fria', nombre: 'Chamoyada de Mango', precio: 75 },
-  { categoria: 'Bebida Fria', nombre: 'Frappé de Caramelo', precio: 90 },
-  { categoria: 'Bebida Fria', nombre: 'Iced Americano', precio: 50 },
-  { categoria: 'Bebida Fria', nombre: 'Matcha Iced Latte', precio: 85 },
-  { categoria: 'Bebida Fria', nombre: 'Té Helado de la Casa', precio: 45 },
-  { categoria: 'Bebida Fria', nombre: 'Affogato (Helado + Espresso)', precio: 75 },
-
-  // PANADERIA
-  { categoria: 'Panaderia', nombre: 'Croissant de Mantequilla', precio: 48 },
-  { categoria: 'Panaderia', nombre: 'Chocolatín', precio: 52 },
-  { categoria: 'Panaderia', nombre: 'Concha de Vainilla', precio: 35 },
-  { categoria: 'Panaderia', nombre: 'Muffin de Chocolate', precio: 45 },
-  { categoria: 'Panaderia', nombre: 'Rol de Canela con Glaseado', precio: 55 },
-  { categoria: 'Panaderia', nombre: 'Bagel con Queso Crema', precio: 65 },
-  { categoria: 'Panaderia', nombre: 'Galleta de Chispas (Grande)', precio: 40 },
-  { categoria: 'Panaderia', nombre: 'Dona de Chocolate', precio: 30 },
-  { categoria: 'Panaderia', nombre: 'Pan de Elote', precio: 45 },
-  { categoria: 'Panaderia', nombre: 'Rebanada de Hogaza Tostada', precio: 25 },
-
-  // COMIDA
-  { categoria: 'Comida', nombre: 'Avocado Toast Clásico', precio: 130 },
-  { categoria: 'Comida', nombre: 'Panini de Pollo al Pesto', precio: 155 },
-  { categoria: 'Comida', nombre: 'Baguette de Jamón y Queso', precio: 145 },
-  { categoria: 'Comida', nombre: 'Molletes con Pico de Gallo', precio: 95 },
-  { categoria: 'Comida', nombre: 'Chilaquiles Rojos o Verdes', precio: 140 },
-  { categoria: 'Comida', nombre: 'Ensalada César', precio: 130 },
-  { categoria: 'Comida', nombre: 'Sándwich de Pavo y Panela', precio: 110 },
-  { categoria: 'Comida', nombre: 'Bagel de Salmón y Alcaparras', precio: 175 },
-  { categoria: 'Comida', nombre: 'Omelette de Espinacas', precio: 120 },
-  { categoria: 'Comida', nombre: 'Cuernito de Jamón y Queso', precio: 85 },
-
-  // POSTRES
-  { categoria: 'Postres', nombre: 'Cheesecake de Frutos Rojos', precio: 90 },
-  { categoria: 'Postres', nombre: 'Pastel de Zanahoria', precio: 85 },
-  { categoria: 'Postres', nombre: 'Brownie con Helado', precio: 98 },
-  { categoria: 'Postres', nombre: 'Tarta de Manzana Caliente', precio: 80 },
-  { categoria: 'Postres', nombre: 'Tiramisú', precio: 115 },
-  { categoria: 'Postres', nombre: 'Crepa de Nutella y Plátano', precio: 95 },
-  { categoria: 'Postres', nombre: 'Mousse de Chocolate', precio: 75 },
-  { categoria: 'Postres', nombre: 'Pay de Limón', precio: 70 },
-  { categoria: 'Postres', nombre: 'Alfajor de Maicena', precio: 45 },
-  { categoria: 'Postres', nombre: 'Volcán de Chocolate', precio: 105 },
-
-  // EXTRAS
-  { categoria: 'Extras', nombre: 'Carga de Espresso Extra', precio: 20 },
-  { categoria: 'Extras', nombre: 'Leche de Almendra (Cambio)', precio: 18 },
-  { categoria: 'Extras', nombre: 'Leche de Avena (Cambio)', precio: 22 },
-  { categoria: 'Extras', nombre: 'Leche Deslactosada (Cambio)', precio: 10 },
-  { categoria: 'Extras', nombre: 'Jarabe de Vainilla', precio: 12 },
-  { categoria: 'Extras', nombre: 'Jarabe de Caramelo', precio: 12 },
-  { categoria: 'Extras', nombre: 'Jarabe de Avellana', precio: 12 },
-  { categoria: 'Extras', nombre: 'Porción de Crema Batida', precio: 15 },
-  { categoria: 'Extras', nombre: 'Porción de Aguacate Extra', precio: 35 },
-  { categoria: 'Extras', nombre: 'Porción de Queso Crema', precio: 20 },
-]
+onMounted(() => {
+  try {
+    const raw = localStorage.getItem('bambu_carta')
+    if (raw) {
+      todosLosProductos.value = JSON.parse(raw).filter((p: any) => p.disponible !== false)
+    }
+  } catch (e) {
+    console.error('Error al cargar la carta desde localStorage', e)
+  }
+})
 
 const productosFiltrados = computed(() => {
-  return todosLosProductos.filter(p => p.categoria === categoriaActiva.value)
+  return todosLosProductos.value.filter(p => p.categoria === categoriaActiva.value)
 })
 
 const totalPages = computed(() => {
@@ -676,7 +577,7 @@ const productosPaginados = computed(() => {
 const searchResults = computed(() => {
   const query = searchQuery.value.toLowerCase().trim()
   if (!query) return []
-  return todosLosProductos.filter(p => 
+  return todosLosProductos.value.filter(p => 
     p.nombre.toLowerCase().includes(query) || 
     p.categoria.toLowerCase().includes(query)
   ).slice(0, 6)

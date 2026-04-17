@@ -48,6 +48,9 @@
                     <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Precio</p>
                   </th>
                   <th class="px-5 py-3 text-center sm:px-6">
+                    <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Disponible</p>
+                  </th>
+                  <th class="px-5 py-3 text-center sm:px-6">
                     <p class="font-medium text-gray-500 text-sm dark:text-gray-400">Variaciones</p>
                   </th>
                   <th class="px-5 py-3 text-center sm:px-6">
@@ -58,13 +61,17 @@
               <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                 <!-- Skeleton -->
                 <tr v-if="loading" v-for="i in 3" :key="`sk-${i}`">
-                  <td v-for="j in 7" :key="j" class="px-5 py-4 sm:px-6">
+                  <td v-for="j in 8" :key="j" class="px-5 py-4 sm:px-6">
                     <div class="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
                   </td>
                 </tr>
 
                 <!-- Filas -->
-                <tr v-for="item in items" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-white/[0.02] transition-colors">
+                <tr
+                  v-for="item in items" :key="item.id"
+                  class="transition-colors"
+                  :class="item.disponible ? 'hover:bg-gray-50 dark:hover:bg-white/[0.02]' : 'bg-gray-50/80 dark:bg-gray-800/30 opacity-60'"
+                >
                   <!-- Foto -->
                   <td class="px-5 py-3 sm:px-6">
                     <div v-if="item.foto_principal" class="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
@@ -79,7 +86,8 @@
                   <!-- Nombre -->
                   <td class="px-5 py-4 sm:px-6">
                     <p class="text-sm font-medium text-gray-800 dark:text-white/90">{{ item.nombre }}</p>
-                    <p class="text-xs text-gray-400 mt-0.5">Receta vinculada</p>
+                    <p v-if="item.receta_id" class="text-xs text-brand-600 mt-0.5">Receta: {{ item.receta_nombre }}</p>
+                    <p v-else class="text-xs text-gray-400 mt-0.5">Sin receta vinculada</p>
                   </td>
                   <!-- Descripción -->
                   <td class="px-5 py-4 sm:px-6 max-w-xs">
@@ -98,6 +106,20 @@
                     <p class="text-sm font-medium text-gray-800 dark:text-white/90">
                       ${{ Number(item.precio).toLocaleString('es-GT', { minimumFractionDigits: 2 }) }}
                     </p>
+                  </td>
+                  <!-- Disponible switch -->
+                  <td class="px-5 py-4 sm:px-6 text-center">
+                    <button
+                      @click="toggleDisponible(item)"
+                      :class="item.disponible ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'"
+                      class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none"
+                      :title="item.disponible ? 'Marcar como no disponible' : 'Marcar como disponible'"
+                    >
+                      <span
+                        :class="item.disponible ? 'translate-x-6' : 'translate-x-1'"
+                        class="inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform"
+                      ></span>
+                    </button>
                   </td>
                   <!-- Variaciones badge -->
                   <td class="px-5 py-4 sm:px-6 text-center">
@@ -190,60 +212,89 @@
                 <h2 class="text-sm font-semibold text-gray-800 dark:text-white">Información General</h2>
               </div>
               <div class="p-6 space-y-4">
-                <!-- Nombre / Receta -->
-                <div>
-                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Receta base <span class="text-red-500">*</span></label>
+                <!-- Nombre del platillo -->
+                <div class="mb-4">
+                  <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Nombre del platillo <span class="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    v-model="form.nombre"
+                    :disabled="viewMode === 'ver'"
+                    placeholder="Ej. Frappé de Oreo"
+                    class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  />
+                </div>
 
-                  <!-- Solo lectura -->
-                  <div v-if="viewMode === 'ver'" class="w-full rounded-lg border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
-                    {{ form.nombre }}
+                <!-- Fila 1: Receta base y Categoría -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <!-- Receta -->
+                  <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Receta base (Estadística) <span class="text-gray-400 font-normal">(opcional)</span></label>
+
+                    <!-- Solo lectura -->
+                    <div v-if="viewMode === 'ver'" class="w-full rounded-lg border border-gray-200 bg-gray-100 px-4 py-2.5 text-sm text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                      {{ form.receta_nombre || 'Ninguna' }}
+                    </div>
+
+                    <!-- Selector con autocomplete -->
+                    <div v-else class="relative">
+                      <input
+                        type="text"
+                        v-model="busquedaReceta"
+                        @focus="showRecetaDropdown = true"
+                        @blur="hideRecetaDropdown"
+                        @input="form.receta_id = null; form.receta_nombre = ''"
+                        autocomplete="off"
+                        :placeholder="loadingRecetas ? 'Cargando recetas...' : 'Buscar receta...' "
+                        class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white disabled:bg-gray-100 disabled:cursor-not-allowed"
+                      />
+                      <!-- Receta seleccionada badge -->
+                      <div v-if="form.receta_id && !showRecetaDropdown" class="absolute right-3 top-1/2 -translate-y-1/2">
+                        <span @click="desvincularReceta" class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-brand-100 text-brand-700 dark:bg-brand-500/15 dark:text-brand-400 cursor-pointer hover:bg-brand-200 transition-colors" title="Desvincular receta">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                          Vinculada
+                        </span>
+                      </div>
+                      <!-- Dropdown -->
+                      <div
+                        v-if="showRecetaDropdown && recetasFiltradas.length > 0"
+                        class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg dark:bg-gray-800 dark:border-gray-700 overflow-hidden"
+                      >
+                        <ul class="max-h-52 overflow-y-auto custom-scrollbar">
+                          <li
+                            v-for="r in recetasFiltradas"
+                            :key="r.id"
+                            @mousedown.prevent="seleccionarReceta(r)"
+                            class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-700/50 last:border-0"
+                          >
+                            <span class="font-medium text-gray-900 dark:text-white text-sm">{{ r.nombre }}</span>
+                            <span class="text-xs text-brand-500 font-semibold">${{ Number(r.costo).toFixed(2) }} costo</span>
+                          </li>
+                        </ul>
+                      </div>
+                      <!-- Sin resultados -->
+                      <div
+                        v-if="showRecetaDropdown && busquedaReceta && recetasFiltradas.length === 0"
+                        class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg dark:bg-gray-800 dark:border-gray-700 px-4 py-3"
+                      >
+                        <p class="text-sm text-gray-400">No se encontró ninguna receta con ese nombre.</p>
+                      </div>
+                    </div>
                   </div>
-
-                  <!-- Selector con autocomplete -->
-                  <div v-else class="relative">
-                    <input
-                      type="text"
-                      v-model="busquedaReceta"
-                      @focus="showRecetaDropdown = true"
-                      @blur="hideRecetaDropdown"
-                      autocomplete="off"
-                      :placeholder="loadingRecetas ? 'Cargando recetas...' : 'Buscar receta...' "
-                      :disabled="viewMode === 'editar'"
+                  
+                  <!-- Categoría -->
+                  <div>
+                    <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Categoría <span class="text-red-500">*</span></label>
+                    <select
+                      v-model="form.categoria"
+                      :disabled="viewMode === 'ver'"
                       class="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    />
-                    <!-- Receta seleccionada badge -->
-                    <div v-if="form.nombre && !showRecetaDropdown" class="absolute right-3 top-1/2 -translate-y-1/2">
-                      <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-brand-100 text-brand-700 dark:bg-brand-500/15 dark:text-brand-400">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                        Vinculada
-                      </span>
-                    </div>
-                    <!-- Dropdown -->
-                    <div
-                      v-if="showRecetaDropdown && recetasFiltradas.length > 0"
-                      class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg dark:bg-gray-800 dark:border-gray-700 overflow-hidden"
                     >
-                      <ul class="max-h-52 overflow-y-auto custom-scrollbar">
-                        <li
-                          v-for="r in recetasFiltradas"
-                          :key="r.id"
-                          @mousedown.prevent="seleccionarReceta(r)"
-                          class="flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors border-b border-gray-100 dark:border-gray-700/50 last:border-0"
-                        >
-                          <span class="font-medium text-gray-900 dark:text-white text-sm">{{ r.nombre }}</span>
-                          <span class="text-xs text-brand-500 font-semibold">${{ Number(r.costo).toFixed(2) }} costo</span>
-                        </li>
-                      </ul>
-                    </div>
-                    <!-- Sin resultados -->
-                    <div
-                      v-if="showRecetaDropdown && busquedaReceta && recetasFiltradas.length === 0"
-                      class="absolute z-20 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg dark:bg-gray-800 dark:border-gray-700 px-4 py-3"
-                    >
-                      <p class="text-sm text-gray-400">No se encontró ninguna receta con ese nombre.</p>
-                    </div>
+                      <option value="" disabled selected>Selecciona una categoría</option>
+                      <option v-for="cat in categoriasPOS" :key="cat" :value="cat">{{ cat }}</option>
+                    </select>
                   </div>
                 </div>
+
                 <!-- Descripción -->
                 <div>
                   <label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Descripción</label>
@@ -432,14 +483,19 @@
                   />
                   <button
                     @click="inputFotoPrincipal?.click()"
+                    :disabled="uploadingFoto"
                     type="button"
-                    class="w-full flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 py-6 text-gray-400 hover:border-brand-400 hover:text-brand-500 transition-colors cursor-pointer"
+                    class="w-full flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 py-6 text-gray-400 hover:border-brand-400 hover:text-brand-500 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg v-if="uploadingFoto" class="w-7 h-7 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    <svg v-else class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    <span class="text-xs font-medium">Haz clic para seleccionar una imagen</span>
-                    <span class="text-xs text-gray-300">PNG, JPG, WEBP hasta 5MB</span>
+                    <span class="text-xs font-medium">{{ uploadingFoto ? 'Subiendo a Cloudinary...' : 'Haz clic para seleccionar una imagen' }}</span>
+                    <span class="text-xs text-gray-300">PNG, JPG, WEBP hasta 8MB</span>
                   </button>
                 </div>
                 <p v-else-if="!form.foto_principal" class="text-sm text-gray-400 text-center py-2">Sin foto principal</p>
@@ -480,13 +536,18 @@
                   />
                   <button
                     @click="inputGaleria?.click()"
+                    :disabled="uploadingGaleria"
                     type="button"
-                    class="w-full flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 py-5 text-gray-400 hover:border-brand-400 hover:text-brand-500 transition-colors cursor-pointer"
+                    class="w-full flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-200 dark:border-gray-700 py-5 text-gray-400 hover:border-brand-400 hover:text-brand-500 transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg v-if="uploadingGaleria" class="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4" />
                     </svg>
-                    <span class="text-xs font-medium">Agregar imágenes a la galería</span>
+                    <span class="text-xs font-medium">{{ uploadingGaleria ? 'Subiendo imágenes...' : 'Agregar imágenes a la galería' }}</span>
                     <span class="text-xs text-gray-300">Puedes seleccionar varias a la vez</span>
                   </button>
                 </div>
@@ -521,6 +582,9 @@ interface GrupoVariacion {
 interface CartaItem {
   id: number
   nombre: string
+  receta_id?: number | null
+  receta_nombre?: string | null
+  categoria: string
   descripcion: string
   stock: number | null
   precio: number
@@ -528,7 +592,11 @@ interface CartaItem {
   galeria: string[]
   tiene_variaciones: boolean
   grupos_variacion: GrupoVariacion[]
+  disponible: boolean
 }
+
+// Opciones de Categorías como en POS
+const categoriasPOS = ['Bebida Caliente', 'Bebida Fria', 'Panaderia', 'Comida', 'Postres', 'Extras']
 
 // ── Estado ──────────────────────────────────────────────────
 const viewMode = ref<'lista' | 'nueva' | 'editar' | 'ver'>('lista')
@@ -541,6 +609,10 @@ const editandoId = ref<number | null>(null)
 // refs para los file inputs
 const inputFotoPrincipal = ref<HTMLInputElement | null>(null)
 const inputGaleria = ref<HTMLInputElement | null>(null)
+
+// Estado de subida de imágenes
+const uploadingFoto    = ref(false)
+const uploadingGaleria = ref(false)
 
 // ── Recetas (selector) ────────────────────────────────────────
 const { getRecetas } = useRecetas()
@@ -556,9 +628,16 @@ const recetasFiltradas = computed(() => {
 })
 
 const seleccionarReceta = (r: Receta) => {
-  form.nombre = r.nombre
+  form.receta_id = r.id
+  form.receta_nombre = r.nombre
   busquedaReceta.value = r.nombre
   showRecetaDropdown.value = false
+}
+
+const desvincularReceta = () => {
+  form.receta_id = null
+  form.receta_nombre = ''
+  busquedaReceta.value = ''
 }
 
 const hideRecetaDropdown = () => {
@@ -567,13 +646,17 @@ const hideRecetaDropdown = () => {
 
 const formVacio = (): Omit<CartaItem, 'id'> => ({
   nombre: '',
+  receta_id: null,
+  receta_nombre: '',
+  categoria: '',
   descripcion: '',
   stock: null,
   precio: 0,
   foto_principal: '',
   galeria: [],
   tiene_variaciones: false,
-  grupos_variacion: []
+  grupos_variacion: [],
+  disponible: true
 })
 
 const form = reactive(formVacio())
@@ -616,6 +699,9 @@ const resetForm = () => {
 
 const llenarForm = (item: CartaItem) => {
   form.nombre = item.nombre
+  form.receta_id = item.receta_id ?? null
+  form.receta_nombre = item.receta_nombre || ''
+  form.categoria = item.categoria || ''
   form.descripcion = item.descripcion
   form.stock = item.stock
   form.precio = item.precio
@@ -623,7 +709,8 @@ const llenarForm = (item: CartaItem) => {
   form.galeria = [...(item.galeria || [])]
   form.tiene_variaciones = item.tiene_variaciones
   form.grupos_variacion = JSON.parse(JSON.stringify(item.grupos_variacion || []))
-  busquedaReceta.value = item.nombre
+  form.disponible = item.disponible ?? true
+  busquedaReceta.value = item.receta_nombre || ''
 }
 
 const persistir = () => {
@@ -659,9 +746,15 @@ const borrarItem = (item: CartaItem) => {
   persistir()
 }
 
+const toggleDisponible = (item: CartaItem) => {
+  item.disponible = !item.disponible
+  persistir()
+}
+
 // ── Guardar ──────────────────────────────────────────────────
 const guardar = () => {
-  if (!form.nombre.trim()) { alert('Debes seleccionar una receta'); return }
+  if (!form.nombre.trim()) { alert('Debes ingresar un nombre para el platillo'); return }
+  if (!form.categoria) { alert('Debes seleccionar una categoría'); return }
   if (!form.precio || form.precio <= 0) { alert('El precio debe ser mayor a 0'); return }
 
   saving.value = true
@@ -670,13 +763,17 @@ const guardar = () => {
       const nuevo: CartaItem = {
         id: Date.now(),
         nombre: form.nombre.trim(),
+        receta_id: form.receta_id,
+        receta_nombre: form.receta_nombre,
+        categoria: form.categoria,
         descripcion: form.descripcion,
         stock: form.stock,
         precio: form.precio,
         foto_principal: form.foto_principal,
         galeria: [...form.galeria],
         tiene_variaciones: form.tiene_variaciones,
-        grupos_variacion: JSON.parse(JSON.stringify(form.grupos_variacion))
+        grupos_variacion: JSON.parse(JSON.stringify(form.grupos_variacion)),
+        disponible: true
       }
       items.value.unshift(nuevo)
     } else {
@@ -685,6 +782,9 @@ const guardar = () => {
         items.value[idx] = {
           ...items.value[idx],
           nombre: form.nombre.trim(),
+          receta_id: form.receta_id,
+          receta_nombre: form.receta_nombre,
+          categoria: form.categoria,
           descripcion: form.descripcion,
           stock: form.stock,
           precio: form.precio,
@@ -719,31 +819,55 @@ const eliminarOpcion = (gi: number, oi: number) => {
   form.grupos_variacion[gi].opciones.splice(oi, 1)
 }
 
-// ── Imágenes (subida desde computadora) ─────────────────────
-const fileToBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = reject
-    reader.readAsDataURL(file)
+// ── Imágenes (subida a Cloudinary via servidor) ──────────────
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
+
+/**
+ * Sube un archivo al endpoint /api/upload/single del servidor,
+ * que lo almacena en Cloudinary y devuelve la URL pública.
+ */
+const subirImagen = async (file: File): Promise<string> => {
+  const formData = new FormData()
+  formData.append('imagen', file)
+  const res = await fetch(`${API_BASE}/upload/single`, {
+    method: 'POST',
+    body: formData,
   })
+  const json = await res.json()
+  if (!res.ok || !json.success) throw new Error(json.message || 'Error al subir imagen')
+  return json.url
+}
 
 const onFotoPrincipalChange = async (e: Event) => {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
-  if (file.size > 5 * 1024 * 1024) { alert('La imagen no debe superar 5MB'); return }
-  form.foto_principal = await fileToBase64(file)
-  // Reset input para permitir re-seleccionar el mismo archivo
-  if (inputFotoPrincipal.value) inputFotoPrincipal.value.value = ''
+  if (file.size > 8 * 1024 * 1024) { alert('La imagen no debe superar 8MB'); return }
+  uploadingFoto.value = true
+  try {
+    form.foto_principal = await subirImagen(file)
+  } catch (err: any) {
+    alert('Error al subir la imagen: ' + err.message)
+  } finally {
+    uploadingFoto.value = false
+    if (inputFotoPrincipal.value) inputFotoPrincipal.value.value = ''
+  }
 }
 
 const onGaleriaChange = async (e: Event) => {
   const files = Array.from((e.target as HTMLInputElement).files || [])
-  for (const file of files) {
-    if (file.size > 5 * 1024 * 1024) { alert(`"${file.name}" supera 5MB y no fue agregada`); continue }
-    const b64 = await fileToBase64(file)
-    form.galeria.push(b64)
+  if (files.length === 0) return
+  uploadingGaleria.value = true
+  try {
+    for (const file of files) {
+      if (file.size > 8 * 1024 * 1024) { alert(`"${file.name}" supera 8MB y no fue agregada`); continue }
+      const url = await subirImagen(file)
+      form.galeria.push(url)
+    }
+  } catch (err: any) {
+    alert('Error al subir imágenes de galería: ' + err.message)
+  } finally {
+    uploadingGaleria.value = false
+    if (inputGaleria.value) inputGaleria.value.value = ''
   }
-  if (inputGaleria.value) inputGaleria.value.value = ''
 }
 </script>
