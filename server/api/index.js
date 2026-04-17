@@ -28,7 +28,9 @@ app.use((req, res, next) => {
 })
 
 // ── Rutas ─────────────────────────────────────────────────────
+app.use('/api/auth',       require('../routes/auth'))
 app.use('/api/usuarios',   require('../routes/usuarios'))
+app.use('/api/ventas',     require('../routes/ventas'))
 app.use('/api/compras',    require('../routes/compras'))
 app.use('/api/compras/:compraId/desglose', require('../routes/compras_desglose'))
 app.use('/api/gastos',     require('../routes/gastos'))

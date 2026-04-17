@@ -80,6 +80,12 @@ const router = createRouter({
       meta: { title: 'Órdenes' },
     },
     {
+      path: '/caja/mesas',
+      name: 'Mesas',
+      component: () => import('../views/Pages/Caja/Mesas.vue'),
+      meta: { title: 'Mesas' },
+    },
+    {
       path: '/caja/pos',
       name: 'POS',
       component: () => import('../views/Pages/Caja/POS.vue'),
@@ -88,13 +94,13 @@ const router = createRouter({
     {
       path: '/caja/ventas',
       name: 'Ventas',
-      component: EnDesarrollo,
+      component: () => import('../views/Pages/Caja/Ventas.vue'),
       meta: { title: 'Ventas' },
     },
     {
       path: '/caja/reportes',
       name: 'Reportes',
-      component: EnDesarrollo,
+      component: () => import('../views/Pages/Caja/Reportes.vue'),
       meta: { title: 'Reportes' },
     },
 
@@ -118,5 +124,22 @@ export default router
 
 router.beforeEach((to, from, next) => {
   document.title = `${to.meta.title || 'Admin'} | Bambu Lomas`
+
+  const publicRoutes = ['/signin', '/signup', '/reset-password', '/error-404']
+  const isPublic = publicRoutes.includes(to.path)
+
+  const storedUser = localStorage.getItem('bambu_user')
+  const isLoggedIn = !!storedUser
+
+  if (!isLoggedIn && !isPublic) {
+    // No autenticado → redirigir al login
+    return next('/signin')
+  }
+
+  if (isLoggedIn && to.path === '/signin') {
+    // Ya autenticado → redirigir al dashboard
+    return next('/')
+  }
+
   next()
 })

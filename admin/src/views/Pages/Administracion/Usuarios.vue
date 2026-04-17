@@ -72,8 +72,8 @@
                   <span
                     class="rounded-full px-2.5 py-1 text-xs font-medium"
                     :class="{
-                      'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-400': user.rol === 'Administrador',
-                      'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300': user.rol !== 'Administrador'
+                      'bg-brand-50 text-brand-700 dark:bg-brand-500/15 dark:text-brand-400': user.rol === 'Administrativo',
+                      'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300': user.rol !== 'Administrativo'
                     }"
                   >{{ user.rol }}</span>
                 </td>
@@ -153,9 +153,9 @@
                   <select v-model="formData.rol" required :disabled="modalMode === 'view'"
                     class="h-11 w-full appearance-none rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 pr-11 text-sm text-gray-800 focus:border-brand-300 focus:outline-none focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:focus:border-brand-800 disabled:opacity-75 disabled:bg-gray-50 dark:disabled:bg-gray-800">
                     <option value="" disabled>Seleccionar Rol</option>
-                    <option value="Administrador">Administrador</option>
-                    <option value="Cajero">Cajero</option>
-                    <option value="Mesero">Mesero</option>
+                    <option value="Administrativo">Administrativo</option>
+                    <option value="Caja">Caja</option>
+                    <option value="Operativo">Operativo</option>
                   </select>
                   <span class="absolute z-30 text-gray-500 -translate-y-1/2 pointer-events-none right-4 top-1/2 dark:text-gray-400">
                     <svg class="stroke-current" width="20" height="20" viewBox="0 0 20 20" fill="none">

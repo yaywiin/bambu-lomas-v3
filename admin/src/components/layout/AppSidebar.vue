@@ -271,6 +271,7 @@ const menuGroups = [
         subItems: [
           { name: "Órdenes", path: "/caja/ordenes" },
           { name: "POS", path: "/caja/pos" },
+          { name: "Mesas", path: "/caja/mesas" },
           { name: "Ventas", path: "/caja/ventas" },
           { name: "Reportes", path: "/caja/reportes" },
         ],

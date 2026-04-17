@@ -23,6 +23,7 @@ router.get('/', async (req, res) => {
         c.tiene_variaciones,
         c.grupos_variacion,
         c.disponible,
+        c.ventas,
         c.created_at
       FROM carta c
       LEFT JOIN recetas r ON r.id = c.receta_id AND r.deleted_at IS NULL

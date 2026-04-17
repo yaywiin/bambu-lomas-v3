@@ -7,7 +7,10 @@
         <!-- Header -->
         <div class="p-4 border-b border-gray-200 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 flex justify-between items-center">
           <div>
-            <h2 class="text-lg font-bold text-gray-800 dark:text-white">Orden Actual</h2>
+            <h2 class="text-lg font-bold text-gray-800 dark:text-white">
+              Orden Actual
+              <span v-if="route.query.mesa" class="text-brand-500 font-black">- Cuenta Mesa #{{ route.query.mesa }}</span>
+            </h2>
             <p class="text-xs text-gray-500 dark:text-gray-400">Pendiente de cobro</p>
           </div>
           <button v-if="orden.length > 0" @click="orden = []" class="text-xs text-red-500 hover:text-red-700 font-medium px-2 py-1 bg-red-50 dark:bg-red-500/10 rounded-md">
@@ -381,10 +384,20 @@
 
 <script setup lang="ts">
 import { ref, computed, reactive, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+import { useMesas } from '@/composables/useMesas'
+import { useVentas } from '@/composables/useVentas'
+import { useAuth } from '@/composables/useAuth'
+
+const route = useRoute()
+const router = useRouter()
+const { obtenerMesa, actualizarOrdenMesa, liberarMesa } = useMesas()
+const { registrarVenta } = useVentas()
+const { currentUser } = useAuth()
 
 // Estado del UI
-const categorias = ['Bebida Caliente', 'Bebida Fria', 'Panaderia', 'Comida', 'Postres', 'Extras']
+const categorias = ['Todos', 'Bebida Caliente', 'Bebida Fria', 'Panaderia', 'Comida', 'Postres', 'Extras']
 const categoriaActiva = ref(categorias[0])
 const mostrarPrecios = ref(false)
 const currentPage = ref(1)
@@ -551,11 +564,37 @@ const cancelarCierre = () => {
 }
 
 const aceptarCierre = () => {
-  // Lógica ficticia para finalizar (luego se enlazará a backend)
-  console.log(`Orden completada: ${calcularTotal.value} pagado por ${datosCobro.nombre || 'Cliente General'} vía ${datosCobro.metodo}`)
+  const ahora = new Date()
+  const horaPedido = ahora.toLocaleTimeString('es-GT', { hour: '2-digit', minute: '2-digit' })
+
+  // Registrar la venta localmente
+  registrarVenta({
+    orden: mockFolio.value,
+    cliente: datosCobro.nombre || 'Cliente General',
+    horaPedido,
+    items: orden.value.map(item => ({
+      cantidad: item.cantidad,
+      descripcion: item.extras?.length
+        ? `${item.producto} (${item.extras.join(', ')})`
+        : item.producto,
+      precio: item.precio,
+    })),
+    total: calcularTotal.value,
+    formaPago: datosCobro.metodo,
+    cajero: currentUser.value?.usuario || currentUser.value?.nombre || 'Cajero',
+    mesa: route.query.mesa ? Number(route.query.mesa) : null,
+  })
+
   orden.value = []
   showModalCierreAdvertencia.value = false
   mockFolio.value = `ORD-${Math.floor(1000 + Math.random() * 9000)}`
+  
+  // Liberar mesa si esta orden pertenece a una
+  if (route.query.mesa) {
+    const mesaId = Number(route.query.mesa)
+    liberarMesa(mesaId)
+    router.push('/caja/mesas')
+  }
 }
 
 // Base de datos local mock de productos con precios integrados
@@ -566,6 +605,14 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000/api'
 const loadingProductos = ref(false)
 
 onMounted(async () => {
+  if (route.query.mesa) {
+    const mesaId = Number(route.query.mesa)
+    const mesaActiva = obtenerMesa(mesaId)
+    if (mesaActiva && mesaActiva.orden.length > 0) {
+      orden.value = [...(mesaActiva.orden as OrdenItem[])]
+    }
+  }
+
   loadingProductos.value = true
   try {
     const res = await fetch(`${API_BASE}/carta`)
@@ -580,8 +627,20 @@ onMounted(async () => {
   }
 })
 
+// Persistencia en vivo del Pos -> a la Mesa
+watch(orden, (newOrden) => {
+  if (route.query.mesa) {
+    const mesaId = Number(route.query.mesa)
+    actualizarOrdenMesa(mesaId, newOrden)
+  }
+}, { deep: true })
+
 
 const productosFiltrados = computed(() => {
+  if (categoriaActiva.value === 'Todos') {
+    // Los más pedidos (mayor cantidad de ventas) salen primero
+    return [...todosLosProductos.value].sort((a, b) => (b.ventas || 0) - (a.ventas || 0))
+  }
   return todosLosProductos.value.filter(p => p.categoria === categoriaActiva.value)
 })
 
